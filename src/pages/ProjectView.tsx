@@ -22,6 +22,7 @@ import {
   Trash2,
   UserCheck,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function ProjectView() {
   const { id } = useParams();
@@ -34,6 +35,7 @@ export default function ProjectView() {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
+  const queryClient = useQueryClient();
 
   if (projectLoading || tasksLoading) {
     return (
@@ -77,8 +79,9 @@ export default function ProjectView() {
   };
 
   const handleRecalculate = () => {
-    // Recarregar tarefas após recálculo
-    window.location.reload();
+    if (!id) return;
+    queryClient.invalidateQueries({ queryKey: ["tasks", id] });
+    queryClient.invalidateQueries({ queryKey: ["projects", id] });
   };
 
   const criticalTasks = tasks.filter((t) => t.is_critical);

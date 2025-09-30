@@ -22,12 +22,13 @@ export const ScheduleMetrics = ({ projectId, onRecalculate }: ScheduleMetricsPro
     p80Date?: string;
   } | null>(null);
 
-  const handleRecalculate = async () => {
-    setIsRecalculating(true);
+  const handleRecalculate = async (options?: { silent?: boolean }) => {
+    const silent = !!options?.silent;
+    if (!silent) setIsRecalculating(true);
     try {
       const result = await recalculateSchedule(projectId);
       const simulation = await runMonteCarloSimulation(projectId, 1000);
-      
+
       setMetrics({
         projectEndDate: result.projectEndDate,
         criticalTaskCount: result.criticalPath.length,
@@ -35,20 +36,22 @@ export const ScheduleMetrics = ({ projectId, onRecalculate }: ScheduleMetricsPro
         p50Date: simulation.p50,
         p80Date: simulation.p80,
       });
-      
-      toast.success("Cronograma recalculado com sucesso!");
-      onRecalculate?.();
+
+      if (!silent) {
+        toast.success("Cronograma recalculado com sucesso!");
+        onRecalculate?.();
+      }
     } catch (error) {
-      toast.error("Erro ao recalcular cronograma");
+      if (!silent) toast.error("Erro ao recalcular cronograma");
       console.error(error);
     } finally {
-      setIsRecalculating(false);
+      if (!silent) setIsRecalculating(false);
     }
   };
 
   useEffect(() => {
-    // Recalcular automaticamente ao montar o componente
-    handleRecalculate();
+    // Recalcular automaticamente ao montar o componente sem acionar callbacks/toasts
+    handleRecalculate({ silent: true });
   }, [projectId]);
 
   if (!metrics) return null;
@@ -58,7 +61,7 @@ export const ScheduleMetrics = ({ projectId, onRecalculate }: ScheduleMetricsPro
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Métricas de Agendamento</h3>
         <Button 
-          onClick={handleRecalculate} 
+          onClick={() => handleRecalculate()} 
           disabled={isRecalculating}
           size="sm"
         >
@@ -146,12 +149,12 @@ export const ScheduleMetrics = ({ projectId, onRecalculate }: ScheduleMetricsPro
               <TrendingUp className="h-5 w-5 text-primary mt-0.5" />
               <div className="space-y-1">
                 <p className="text-sm font-medium">Política de Compromisso</p>
-                <p className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground">
                   Prazo <Badge variant="outline">Agressivo</Badge>:{" "}
                   {new Date(metrics.p50Date).toLocaleDateString("pt-BR")} (P50) |
                   Prazo <Badge variant="secondary">Seguro</Badge>:{" "}
                   {new Date(metrics.p80Date).toLocaleDateString("pt-BR")} (P80)
-                </p>
+                </div>
               </div>
             </div>
           </CardContent>
