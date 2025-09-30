@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GanttChart } from "@/components/GanttChart";
 import { MindMapView } from "@/components/MindMapView";
 import { TaskDialog } from "@/components/TaskDialog";
+import { TaskImportDialog } from "@/components/TaskImportDialog";
 import { ScheduleMetrics } from "@/components/ScheduleMetrics";
 import { useProject } from "@/hooks/useProjects";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
@@ -21,6 +22,7 @@ import {
   Edit,
   Trash2,
   UserCheck,
+  Upload,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -28,6 +30,7 @@ export default function ScheduleView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const { data: project, isLoading: projectLoading } = useProject(id || "");
@@ -82,6 +85,14 @@ export default function ScheduleView() {
     if (!id) return;
     queryClient.invalidateQueries({ queryKey: ["tasks", id] });
     queryClient.invalidateQueries({ queryKey: ["projects", id] });
+  };
+
+  const handleImport = async (importedTasks: Partial<Task>[]) => {
+    // Import tasks sequentially to maintain order
+    for (const task of importedTasks) {
+      await createTask.mutateAsync(task as Omit<Task, "id" | "created_at" | "updated_at">);
+    }
+    handleRecalculate();
   };
 
   const criticalTasks = tasks.filter((t) => t.is_critical);
@@ -168,6 +179,13 @@ export default function ScheduleView() {
             >
               <UserCheck className="h-4 w-4 mr-2" />
               Governança
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setImportDialogOpen(true)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Importar Tarefas
             </Button>
             <Button variant="default" className="shadow-primary" onClick={handleNewTask}>
               <Plus className="h-4 w-4 mr-2" />
@@ -328,6 +346,13 @@ export default function ScheduleView() {
         task={selectedTask}
         projectId={id || ""}
         tasks={tasks}
+      />
+
+      <TaskImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImport={handleImport}
+        projectId={id || ""}
       />
     </div>
   );
