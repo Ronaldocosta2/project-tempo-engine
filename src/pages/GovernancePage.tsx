@@ -249,7 +249,7 @@ export default function GovernancePage() {
           </TabsList>
 
           {/* Stakeholders Tab */}
-          <TabsContent value="stakeholders" className="space-y-4">
+          <TabsContent value="stakeholders" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground">
                 Stakeholders do Projeto
@@ -260,49 +260,70 @@ export default function GovernancePage() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            {/* Matriz expandida */}
+            <div className="animate-fade-in">
               <StakeholderMatrix
                 stakeholders={stakeholders}
                 onStakeholderClick={handleEditStakeholder}
               />
-              
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Lista de Stakeholders</h3>
-                <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                  {stakeholders.map((stakeholder) => (
-                    <div
-                      key={stakeholder.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold">{stakeholder.name}</h4>
-                          <Badge variant="outline" className="text-xs">
-                            {stakeholder.role}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                          <span>Poder: {stakeholder.power_level}/5</span>
-                          <span>Interesse: {stakeholder.interest_level}/5</span>
-                          <Badge
-                            variant="outline"
-                            className={
-                              stakeholder.influence === "alta"
-                                ? "bg-success-light text-success"
-                                : stakeholder.influence === "media"
-                                ? "bg-warning-light text-warning"
-                                : "bg-muted"
-                            }
-                          >
-                            Influência: {stakeholder.influence}
-                          </Badge>
-                        </div>
+            </div>
+            
+            {/* Lista de Stakeholders abaixo da matriz */}
+            <Card className="p-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">Lista Completa de Stakeholders</h3>
+                <Badge variant="outline" className="text-sm">
+                  {stakeholders.length} {stakeholders.length === 1 ? 'stakeholder' : 'stakeholders'}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {stakeholders.map((stakeholder, index) => (
+                  <div
+                    key={stakeholder.id}
+                    className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-br from-muted/50 to-muted/30 hover:from-muted/70 hover:to-muted/50 transition-all hover:scale-[1.02] hover:shadow-md border border-border/50 animate-fade-in"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="font-semibold text-foreground">{stakeholder.name}</h4>
+                        <Badge variant="outline" className="text-xs">
+                          {stakeholder.role}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          Poder: {stakeholder.power_level}/5
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          Interesse: {stakeholder.interest_level}/5
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={
+                            stakeholder.influence === "alta"
+                              ? "bg-success/20 text-success border-success/50"
+                              : stakeholder.influence === "media"
+                              ? "bg-warning/20 text-warning border-warning/50"
+                              : "bg-muted border-border"
+                          }
+                        >
+                          {stakeholder.influence}
+                        </Badge>
+                      </div>
+                      {stakeholder.expectation && (
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-1">
+                          Expectativa: {stakeholder.expectation}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 ml-4">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEditStakeholder(stakeholder)}
+                        className="hover:bg-primary/10 hover:text-primary"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -310,20 +331,25 @@ export default function GovernancePage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteStakeholder(stakeholder.id)}
+                        className="hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    </div>
-                  ))}
-                  {stakeholders.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">
-                      Nenhum stakeholder cadastrado
-                    </p>
-                  )}
-                </div>
-              </Card>
-            </div>
+                  </div>
+                ))}
+                {stakeholders.length === 0 && (
+                  <div className="col-span-2 text-center py-12">
+                    <Users className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-muted-foreground">Nenhum stakeholder cadastrado</p>
+                    <Button variant="outline" onClick={handleNewStakeholder} className="mt-4">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar primeiro stakeholder
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Card>
           </TabsContent>
 
           {/* Meetings Tab */}
