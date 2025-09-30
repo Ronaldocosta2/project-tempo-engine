@@ -98,7 +98,7 @@ export const ProjectCard = ({
               onClick={() => navigate(`/project/${id}`)}
               className="shadow-primary"
             >
-              Ver Gantt
+              Ver Projeto
             </Button>
           </div>
         </div>

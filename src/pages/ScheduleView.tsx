@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function ProjectView() {
+export default function ScheduleView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -135,11 +135,11 @@ export default function ProjectView() {
           <div className="space-y-2">
             <Button
               variant="ghost"
-              onClick={() => navigate("/")}
+              onClick={() => navigate(`/project/${id}`)}
               className="mb-2 -ml-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar aos Projetos
+              Voltar ao Projeto
             </Button>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-foreground">{project.name}</h1>
