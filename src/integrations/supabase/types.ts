@@ -14,7 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      projects: {
+        Row: {
+          budget: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string
+          id: string
+          name: string
+          progress: number | null
+          start_date: string
+          status: string
+          team_size: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          budget?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          name: string
+          progress?: number | null
+          start_date: string
+          status?: string
+          team_size?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          budget?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          progress?: number | null
+          start_date?: string
+          status?: string
+          team_size?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      task_dependencies: {
+        Row: {
+          created_at: string | null
+          id: string
+          predecessor_id: string
+          successor_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          predecessor_id: string
+          successor_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          predecessor_id?: string
+          successor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_dependencies_predecessor_id_fkey"
+            columns: ["predecessor_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_successor_id_fkey"
+            columns: ["successor_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          created_at: string | null
+          duration: number
+          end_date: string
+          id: string
+          is_critical: boolean | null
+          name: string
+          parent_id: string | null
+          progress: number | null
+          project_id: string
+          start_date: string
+          status: string
+          updated_at: string | null
+          wbs: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration: number
+          end_date: string
+          id?: string
+          is_critical?: boolean | null
+          name: string
+          parent_id?: string | null
+          progress?: number | null
+          project_id: string
+          start_date: string
+          status?: string
+          updated_at?: string | null
+          wbs: string
+        }
+        Update: {
+          created_at?: string | null
+          duration?: number
+          end_date?: string
+          id?: string
+          is_critical?: boolean | null
+          name?: string
+          parent_id?: string | null
+          progress?: number | null
+          project_id?: string
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+          wbs?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
