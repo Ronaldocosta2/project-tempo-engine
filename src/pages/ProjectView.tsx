@@ -19,6 +19,7 @@ import {
   Plus,
   Edit,
   Trash2,
+  UserCheck,
 } from "lucide-react";
 
 export default function ProjectView() {
@@ -151,10 +152,19 @@ export default function ProjectView() {
             </div>
           </div>
 
-          <Button variant="default" className="shadow-primary" onClick={handleNewTask}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Tarefa
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/project/${id}/governance`)}
+            >
+              <UserCheck className="h-4 w-4 mr-2" />
+              Governança
+            </Button>
+            <Button variant="default" className="shadow-primary" onClick={handleNewTask}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Tarefa
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
