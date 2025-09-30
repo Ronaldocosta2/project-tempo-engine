@@ -5,9 +5,30 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { StakeholderMatrix } from "@/components/StakeholderMatrix";
-import { useStakeholders } from "@/hooks/useStakeholders";
-import { useMeetings } from "@/hooks/useMeetings";
-import { useActionItems } from "@/hooks/useActionItems";
+import { StakeholderDialog } from "@/components/StakeholderDialog";
+import { MeetingDialog } from "@/components/MeetingDialog";
+import { ActionItemDialog } from "@/components/ActionItemDialog";
+import {
+  useStakeholders,
+  useCreateStakeholder,
+  useUpdateStakeholder,
+  useDeleteStakeholder,
+  Stakeholder,
+} from "@/hooks/useStakeholders";
+import {
+  useMeetings,
+  useCreateMeeting,
+  useUpdateMeeting,
+  useDeleteMeeting,
+  Meeting,
+} from "@/hooks/useMeetings";
+import {
+  useActionItems,
+  useCreateActionItem,
+  useUpdateActionItem,
+  useDeleteActionItem,
+  ActionItem,
+} from "@/hooks/useActionItems";
 import {
   ArrowLeft,
   Users,
@@ -24,17 +45,108 @@ export default function GovernancePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   
+  const [stakeholderDialogOpen, setStakeholderDialogOpen] = useState(false);
+  const [selectedStakeholder, setSelectedStakeholder] = useState<Stakeholder | null>(null);
+  
+  const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
+  
+  const [actionDialogOpen, setActionDialogOpen] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<ActionItem | null>(null);
+  
   const { data: stakeholders = [], isLoading: stakeholdersLoading } = useStakeholders(id || "");
   const { data: meetings = [], isLoading: meetingsLoading } = useMeetings(id || "");
   const { data: actionItems = [], isLoading: actionItemsLoading } = useActionItems(id || "");
+  
+  const createStakeholder = useCreateStakeholder();
+  const updateStakeholder = useUpdateStakeholder();
+  const deleteStakeholder = useDeleteStakeholder();
+  
+  const createMeeting = useCreateMeeting();
+  const updateMeeting = useUpdateMeeting();
+  const deleteMeeting = useDeleteMeeting();
+  
+  const createActionItem = useCreateActionItem();
+  const updateActionItem = useUpdateActionItem();
+  const deleteActionItem = useDeleteActionItem();
 
-  if (stakeholdersLoading || meetingsLoading || actionItemsLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
-        <p className="text-muted-foreground">Carregando...</p>
-      </div>
-    );
-  }
+  // Handlers para Stakeholders
+  const handleSaveStakeholder = (stakeholderData: Partial<Stakeholder>) => {
+    if (selectedStakeholder) {
+      updateStakeholder.mutate({ ...stakeholderData, id: selectedStakeholder.id });
+    } else {
+      createStakeholder.mutate(stakeholderData as Omit<Stakeholder, "id" | "created_at" | "updated_at">);
+    }
+    setSelectedStakeholder(null);
+  };
+
+  const handleEditStakeholder = (stakeholder: Stakeholder) => {
+    setSelectedStakeholder(stakeholder);
+    setStakeholderDialogOpen(true);
+  };
+
+  const handleDeleteStakeholder = (stakeholderId: string) => {
+    if (confirm("Tem certeza que deseja remover este stakeholder?")) {
+      deleteStakeholder.mutate({ id: stakeholderId, projectId: id || "" });
+    }
+  };
+
+  const handleNewStakeholder = () => {
+    setSelectedStakeholder(null);
+    setStakeholderDialogOpen(true);
+  };
+
+  // Handlers para Reuniões
+  const handleSaveMeeting = (meetingData: Partial<Meeting>) => {
+    if (selectedMeeting) {
+      updateMeeting.mutate({ ...meetingData, id: selectedMeeting.id });
+    } else {
+      createMeeting.mutate(meetingData as Omit<Meeting, "id" | "created_at" | "updated_at">);
+    }
+    setSelectedMeeting(null);
+  };
+
+  const handleEditMeeting = (meeting: Meeting) => {
+    setSelectedMeeting(meeting);
+    setMeetingDialogOpen(true);
+  };
+
+  const handleDeleteMeeting = (meetingId: string) => {
+    if (confirm("Tem certeza que deseja remover esta reunião?")) {
+      deleteMeeting.mutate({ id: meetingId, projectId: id || "" });
+    }
+  };
+
+  const handleNewMeeting = () => {
+    setSelectedMeeting(null);
+    setMeetingDialogOpen(true);
+  };
+
+  // Handlers para Combinados
+  const handleSaveActionItem = (actionData: Partial<ActionItem>) => {
+    if (selectedAction) {
+      updateActionItem.mutate({ ...actionData, id: selectedAction.id });
+    } else {
+      createActionItem.mutate(actionData as Omit<ActionItem, "id" | "created_at" | "updated_at">);
+    }
+    setSelectedAction(null);
+  };
+
+  const handleEditActionItem = (action: ActionItem) => {
+    setSelectedAction(action);
+    setActionDialogOpen(true);
+  };
+
+  const handleDeleteActionItem = (actionId: string) => {
+    if (confirm("Tem certeza que deseja remover este combinado?")) {
+      deleteActionItem.mutate({ id: actionId, projectId: id || "" });
+    }
+  };
+
+  const handleNewActionItem = () => {
+    setSelectedAction(null);
+    setActionDialogOpen(true);
+  };
 
   const criticalStakeholders = stakeholders.filter(
     (s) => s.power_level >= 4 && s.interest_level >= 4
@@ -45,6 +157,14 @@ export default function GovernancePage() {
   );
 
   const pendingActions = actionItems.filter((a) => a.status === "pendente");
+
+  if (stakeholdersLoading || meetingsLoading || actionItemsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
 
   const stats = [
     {
@@ -125,14 +245,17 @@ export default function GovernancePage() {
               <h2 className="text-xl font-semibold text-foreground">
                 Stakeholders do Projeto
               </h2>
-              <Button variant="default">
+              <Button variant="default" onClick={handleNewStakeholder}>
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Stakeholder
               </Button>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
-              <StakeholderMatrix stakeholders={stakeholders} />
+              <StakeholderMatrix
+                stakeholders={stakeholders}
+                onStakeholderClick={handleEditStakeholder}
+              />
               
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Lista de Stakeholders</h3>
@@ -165,15 +288,23 @@ export default function GovernancePage() {
                             Influência: {stakeholder.influence}
                           </Badge>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditStakeholder(stakeholder)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteStakeholder(stakeholder.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                     </div>
                   ))}
                   {stakeholders.length === 0 && (
@@ -190,7 +321,7 @@ export default function GovernancePage() {
           <TabsContent value="meetings" className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground">Reuniões</h2>
-              <Button variant="default">
+              <Button variant="default" onClick={handleNewMeeting}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Reunião
               </Button>
@@ -229,15 +360,23 @@ export default function GovernancePage() {
                         <span>{meeting.duration_minutes} min</span>
                         {meeting.location && <span>📍 {meeting.location}</span>}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditMeeting(meeting)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteMeeting(meeting.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                   </div>
                 </Card>
               ))}
@@ -253,7 +392,7 @@ export default function GovernancePage() {
           <TabsContent value="actions" className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground">Combinados</h2>
-              <Button variant="default">
+              <Button variant="default" onClick={handleNewActionItem}>
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Combinado
               </Button>
@@ -311,10 +450,18 @@ export default function GovernancePage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditActionItem(item)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteActionItem(item.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -330,6 +477,33 @@ export default function GovernancePage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Dialogs */}
+      <StakeholderDialog
+        open={stakeholderDialogOpen}
+        onOpenChange={setStakeholderDialogOpen}
+        onSave={handleSaveStakeholder}
+        stakeholder={selectedStakeholder}
+        projectId={id || ""}
+      />
+
+      <MeetingDialog
+        open={meetingDialogOpen}
+        onOpenChange={setMeetingDialogOpen}
+        onSave={handleSaveMeeting}
+        meeting={selectedMeeting}
+        projectId={id || ""}
+      />
+
+      <ActionItemDialog
+        open={actionDialogOpen}
+        onOpenChange={setActionDialogOpen}
+        onSave={handleSaveActionItem}
+        actionItem={selectedAction}
+        projectId={id || ""}
+        stakeholders={stakeholders}
+        meetings={meetings}
+      />
     </div>
   );
 }
