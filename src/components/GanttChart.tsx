@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertCircle, CheckCircle2, Clock, Calendar } from "lucide-react";
 
 interface Task {
   id: string;
@@ -13,6 +14,7 @@ interface Task {
   isCritical: boolean;
   status: "not-started" | "in-progress" | "completed";
   dependencies?: string[];
+  actualEndDate?: string;
 }
 
 interface GanttChartProps {
@@ -123,35 +125,77 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
               {tasks.map((task) => {
                 const left = calculatePosition(task.startDate);
                 const width = calculateWidth(task.startDate, task.endDate);
+                const isDelayed = task.status === "completed" && task.actualEndDate && 
+                                 new Date(task.actualEndDate) > new Date(task.endDate);
+                const isOnTime = task.status === "completed" && task.actualEndDate && 
+                                new Date(task.actualEndDate) <= new Date(task.endDate);
 
                 return (
                   <div key={task.id} className="h-12 relative group">
-                    <div
-                      className="absolute top-1/2 -translate-y-1/2 h-8 rounded-md transition-all duration-300 group-hover:h-9 cursor-pointer overflow-hidden"
-                      style={{
-                        left: `${left}%`,
-                        width: `${width}%`,
-                        minWidth: "40px",
-                      }}
-                    >
-                      <div
-                        className={`h-full rounded-md border-2 relative ${
-                          task.isCritical
-                            ? "bg-critical/20 border-critical"
-                            : "bg-primary-light border-primary"
-                        }`}
-                      >
-                        <div
-                          className={`h-full rounded-md transition-all duration-500 ${
-                            task.isCritical ? "bg-critical" : "bg-gradient-primary"
-                          }`}
-                          style={{ width: `${task.progress}%` }}
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-foreground">
-                          {task.progress}%
-                        </div>
-                      </div>
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="absolute top-1/2 -translate-y-1/2 h-8 rounded-md transition-all duration-300 group-hover:h-9 cursor-pointer overflow-hidden"
+                            style={{
+                              left: `${left}%`,
+                              width: `${width}%`,
+                              minWidth: "40px",
+                            }}
+                          >
+                            <div
+                              className={`h-full rounded-md border-2 relative ${
+                                task.isCritical
+                                  ? "bg-critical/20 border-critical"
+                                  : "bg-primary-light border-primary"
+                              }`}
+                            >
+                              <div
+                                className={`h-full rounded-md transition-all duration-500 ${
+                                  task.isCritical ? "bg-critical" : "bg-gradient-primary"
+                                }`}
+                                style={{ width: `${task.progress}%` }}
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-foreground">
+                                {task.progress}%
+                              </div>
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="space-y-2">
+                          <div className="font-semibold">{task.name}</div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="h-3 w-3" />
+                            <span>Início: {new Date(task.startDate).toLocaleDateString("pt-BR")}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="h-3 w-3" />
+                            <span>Fim Planejado: {new Date(task.endDate).toLocaleDateString("pt-BR")}</span>
+                          </div>
+                          {task.actualEndDate && (
+                            <>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Calendar className="h-3 w-3" />
+                                <span>Fim Real: {new Date(task.actualEndDate).toLocaleDateString("pt-BR")}</span>
+                              </div>
+                              {isOnTime && (
+                                <div className="text-green-600 font-medium text-sm">
+                                  ✓ Concluída no prazo
+                                </div>
+                              )}
+                              {isDelayed && (
+                                <div className="text-red-600 font-medium text-sm">
+                                  ⚠ Atrasada em {Math.ceil((new Date(task.actualEndDate).getTime() - new Date(task.endDate).getTime()) / (1000 * 60 * 60 * 24))} dias
+                                </div>
+                              )}
+                            </>
+                          )}
+                          <div className="text-sm text-muted-foreground">
+                            Duração: {task.duration} dias | Progresso: {task.progress}%
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 );
               })}

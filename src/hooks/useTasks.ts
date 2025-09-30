@@ -38,6 +38,7 @@ export interface Task {
   client_importance?: number;
   capacity_percent?: number;
   effort_hours?: number;
+  actual_end_date?: string;
 }
 
 export const useTasks = (projectId: string) => {

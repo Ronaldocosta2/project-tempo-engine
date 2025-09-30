@@ -10,6 +10,7 @@ import { TaskDialog } from "@/components/TaskDialog";
 import { TaskImportDialog } from "@/components/TaskImportDialog";
 import { ScheduleMetrics } from "@/components/ScheduleMetrics";
 import { ConflictsPanel } from "@/components/ConflictsPanel";
+import { CrossProjectAnalysis } from "@/components/CrossProjectAnalysis";
 import { useProject } from "@/hooks/useProjects";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
 import {
@@ -108,6 +109,7 @@ export default function ScheduleView() {
     progress: t.progress,
     isCritical: t.is_critical,
     status: t.status,
+    actualEndDate: t.actual_end_date,
   }));
 
   const stats = [
@@ -222,6 +224,7 @@ export default function ScheduleView() {
             <TabsTrigger value="gantt">Cronograma Gantt</TabsTrigger>
             <TabsTrigger value="mindmap">Mapa Mental (EAP)</TabsTrigger>
             <TabsTrigger value="tasks">Lista de Tarefas</TabsTrigger>
+            <TabsTrigger value="cross-project">Cross-Project</TabsTrigger>
           </TabsList>
 
           <TabsContent value="gantt" className="space-y-4">
@@ -277,6 +280,18 @@ export default function ScheduleView() {
                             <span>{task.duration} dias</span>
                             <span>•</span>
                             <span>{task.progress}% concluído</span>
+                            {task.status === "completed" && task.actual_end_date && (
+                              <>
+                                <span>•</span>
+                                {new Date(task.actual_end_date) <= new Date(task.end_date) ? (
+                                  <span className="text-green-600 font-medium">✓ No prazo</span>
+                                ) : (
+                                  <span className="text-red-600 font-medium">
+                                    ⚠ Atrasada {Math.ceil((new Date(task.actual_end_date).getTime() - new Date(task.end_date).getTime()) / (1000 * 60 * 60 * 24))}d
+                                  </span>
+                                )}
+                              </>
+                            )}
                           </div>
                         </div>
                         <Badge variant="outline">
@@ -310,6 +325,10 @@ export default function ScheduleView() {
                 <p className="text-muted-foreground">Nenhuma tarefa cadastrada ainda.</p>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="cross-project" className="space-y-4">
+            <CrossProjectAnalysis />
           </TabsContent>
         </Tabs>
 

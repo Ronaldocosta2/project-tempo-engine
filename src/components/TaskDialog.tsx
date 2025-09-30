@@ -185,6 +185,29 @@ export const TaskDialog = ({
             </div>
           </div>
 
+          {formData.status === "completed" && (
+            <div className="space-y-2">
+              <Label htmlFor="actual_end_date">Data Real de Conclusão</Label>
+              <Input
+                id="actual_end_date"
+                type="date"
+                value={formData.actual_end_date || ""}
+                onChange={(e) => setFormData({ ...formData, actual_end_date: e.target.value })}
+              />
+              {formData.actual_end_date && formData.end_date && (
+                <p className="text-sm">
+                  {new Date(formData.actual_end_date) <= new Date(formData.end_date) ? (
+                    <span className="text-green-600">✓ Concluída no prazo</span>
+                  ) : (
+                    <span className="text-red-600">
+                      ⚠ Atrasada em {Math.ceil((new Date(formData.actual_end_date).getTime() - new Date(formData.end_date).getTime()) / (1000 * 60 * 60 * 24))} dias
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="parent_id">Tarefa Pai (opcional)</Label>

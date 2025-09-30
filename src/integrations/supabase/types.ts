@@ -796,6 +796,7 @@ export type Database = {
       }
       tasks: {
         Row: {
+          actual_end_date: string | null
           baseline_duration: number | null
           baseline_end_date: string | null
           baseline_start_date: string | null
@@ -833,6 +834,7 @@ export type Database = {
           wbs: string
         }
         Insert: {
+          actual_end_date?: string | null
           baseline_duration?: number | null
           baseline_end_date?: string | null
           baseline_start_date?: string | null
@@ -870,6 +872,7 @@ export type Database = {
           wbs: string
         }
         Update: {
+          actual_end_date?: string | null
           baseline_duration?: number | null
           baseline_end_date?: string | null
           baseline_start_date?: string | null
