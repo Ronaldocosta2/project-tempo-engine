@@ -3,7 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GanttChart } from "@/components/GanttChart";
+import { MindMapView } from "@/components/MindMapView";
+import { TaskDialog } from "@/components/TaskDialog";
+import { useProject } from "@/hooks/useProjects";
+import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
 import {
   ArrowLeft,
   Calendar,
@@ -12,109 +17,76 @@ import {
   AlertTriangle,
   Clock,
   Plus,
+  Edit,
+  Trash2,
 } from "lucide-react";
 
 export default function ProjectView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // Mock data - em produção viria do backend
-  const project = {
-    id: id || "1",
-    name: "Sistema de Gestão Empresarial",
-    description: "Desenvolvimento completo de ERP com módulos financeiro, RH e vendas",
-    startDate: "01/03/2025",
-    endDate: "30/11/2025",
-    progress: 35,
-    status: "on-track" as const,
-    teamSize: 12,
-    budget: "R$ 450.000",
-    criticalTasks: 5,
+  const { data: project, isLoading: projectLoading } = useProject(id || "");
+  const { data: tasks = [], isLoading: tasksLoading } = useTasks(id || "");
+  const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
+
+  if (projectLoading || tasksLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+        <p className="text-muted-foreground">Projeto não encontrado</p>
+      </div>
+    );
+  }
+
+  const handleSaveTask = (taskData: Partial<Task>) => {
+    if (selectedTask) {
+      updateTask.mutate({ ...taskData, id: selectedTask.id });
+    } else {
+      createTask.mutate(taskData as Omit<Task, "id" | "created_at" | "updated_at">);
+    }
+    setSelectedTask(null);
   };
 
-  const tasks = [
-    {
-      id: "1",
-      wbs: "1.0",
-      name: "Iniciação do Projeto",
-      startDate: "2025-03-01",
-      endDate: "2025-03-15",
-      duration: 14,
-      progress: 100,
-      isCritical: true,
-      status: "completed" as const,
-    },
-    {
-      id: "2",
-      wbs: "2.0",
-      name: "Análise de Requisitos",
-      startDate: "2025-03-16",
-      endDate: "2025-04-30",
-      duration: 45,
-      progress: 85,
-      isCritical: true,
-      status: "in-progress" as const,
-    },
-    {
-      id: "3",
-      wbs: "3.0",
-      name: "Desenho da Arquitetura",
-      startDate: "2025-04-15",
-      endDate: "2025-05-31",
-      duration: 46,
-      progress: 60,
-      isCritical: true,
-      status: "in-progress" as const,
-    },
-    {
-      id: "4",
-      wbs: "4.0",
-      name: "Desenvolvimento Backend",
-      startDate: "2025-06-01",
-      endDate: "2025-08-31",
-      duration: 91,
-      progress: 0,
-      isCritical: true,
-      status: "not-started" as const,
-      dependencies: ["3"],
-    },
-    {
-      id: "5",
-      wbs: "5.0",
-      name: "Desenvolvimento Frontend",
-      startDate: "2025-07-01",
-      endDate: "2025-09-30",
-      duration: 91,
-      progress: 0,
-      isCritical: false,
-      status: "not-started" as const,
-      dependencies: ["4"],
-    },
-    {
-      id: "6",
-      wbs: "6.0",
-      name: "Testes e QA",
-      startDate: "2025-10-01",
-      endDate: "2025-10-31",
-      duration: 30,
-      progress: 0,
-      isCritical: true,
-      status: "not-started" as const,
-      dependencies: ["5"],
-    },
-    {
-      id: "7",
-      wbs: "7.0",
-      name: "Implantação",
-      startDate: "2025-11-01",
-      endDate: "2025-11-30",
-      duration: 30,
-      progress: 0,
-      isCritical: true,
-      status: "not-started" as const,
-      dependencies: ["6"],
-    },
-  ];
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setTaskDialogOpen(true);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    if (confirm("Tem certeza que deseja deletar esta tarefa?")) {
+      deleteTask.mutate({ id: taskId, projectId: id || "" });
+    }
+  };
+
+  const handleNewTask = () => {
+    setSelectedTask(null);
+    setTaskDialogOpen(true);
+  };
+
+  const criticalTasks = tasks.filter((t) => t.is_critical);
+
+  const ganttTasks = tasks.map((t) => ({
+    id: t.id,
+    wbs: t.wbs,
+    name: t.name,
+    startDate: t.start_date,
+    endDate: t.end_date,
+    duration: t.duration,
+    progress: t.progress,
+    isCritical: t.is_critical,
+    status: t.status,
+  }));
 
   const stats = [
     {
@@ -125,19 +97,21 @@ export default function ProjectView() {
     },
     {
       label: "Tarefas Críticas",
-      value: project.criticalTasks.toString(),
+      value: criticalTasks.length.toString(),
       icon: AlertTriangle,
       color: "text-critical",
     },
     {
-      label: "Dias Restantes",
-      value: "215",
+      label: "Progresso Médio",
+      value: tasks.length > 0 
+        ? `${Math.round(tasks.reduce((acc, t) => acc + t.progress, 0) / tasks.length)}%`
+        : "0%",
       icon: Clock,
       color: "text-warning",
     },
     {
       label: "Equipe",
-      value: project.teamSize.toString(),
+      value: project.team_size.toString(),
       icon: Users,
       color: "text-success",
     },
@@ -167,16 +141,17 @@ export default function ProjectView() {
             <div className="flex items-center gap-6 text-sm text-muted-foreground pt-2">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                {project.startDate} - {project.endDate}
+                {new Date(project.start_date).toLocaleDateString("pt-BR")} -{" "}
+                {new Date(project.end_date).toLocaleDateString("pt-BR")}
               </div>
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                {project.teamSize} pessoas
+                {project.team_size} pessoas
               </div>
             </div>
           </div>
 
-          <Button variant="default" className="shadow-primary">
+          <Button variant="default" className="shadow-primary" onClick={handleNewTask}>
             <Plus className="h-4 w-4 mr-2" />
             Nova Tarefa
           </Button>
@@ -197,35 +172,112 @@ export default function ProjectView() {
           ))}
         </div>
 
-        {/* Gantt Chart */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-foreground">Cronograma Gantt</h2>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                Exportar CSV
-              </Button>
-              <Button variant="outline" size="sm">
-                Baseline
-              </Button>
-              <Button variant="default" size="sm">
-                Recalcular
-              </Button>
+        {/* Tabs para Gantt e Mapa Mental */}
+        <Tabs defaultValue="gantt" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="gantt">Cronograma Gantt</TabsTrigger>
+            <TabsTrigger value="mindmap">Mapa Mental (EAP)</TabsTrigger>
+            <TabsTrigger value="tasks">Lista de Tarefas</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="gantt" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-foreground">Cronograma Gantt</h2>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                  Exportar CSV
+                </Button>
+                <Button variant="outline" size="sm">
+                  Baseline
+                </Button>
+              </div>
             </div>
-          </div>
-          <GanttChart tasks={tasks} />
-        </div>
+            {ganttTasks.length > 0 ? (
+              <GanttChart tasks={ganttTasks} />
+            ) : (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">Nenhuma tarefa cadastrada ainda.</p>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="mindmap" className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground">Estrutura Analítica do Projeto (EAP)</h2>
+            {tasks.length > 0 ? (
+              <MindMapView tasks={tasks} />
+            ) : (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">Nenhuma tarefa cadastrada ainda.</p>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="tasks" className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground">Lista de Tarefas</h2>
+            {tasks.length > 0 ? (
+              <div className="space-y-2">
+                {tasks.map((task) => (
+                  <Card key={task.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 flex-1">
+                        <Badge variant="outline" className={task.is_critical ? "bg-critical-light text-critical border-critical/20" : ""}>
+                          {task.wbs}
+                        </Badge>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{task.name}</h3>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                            <span>{new Date(task.start_date).toLocaleDateString("pt-BR")}</span>
+                            <span>→</span>
+                            <span>{new Date(task.end_date).toLocaleDateString("pt-BR")}</span>
+                            <span>•</span>
+                            <span>{task.duration} dias</span>
+                            <span>•</span>
+                            <span>{task.progress}% concluído</span>
+                          </div>
+                        </div>
+                        <Badge variant="outline">
+                          {task.status === "completed" && "Concluído"}
+                          {task.status === "in-progress" && "Em Progresso"}
+                          {task.status === "not-started" && "Não Iniciado"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditTask(task)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteTask(task.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">Nenhuma tarefa cadastrada ainda.</p>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Caminho Crítico */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-critical" />
-            Caminho Crítico
-          </h3>
-          <div className="space-y-2">
-            {tasks
-              .filter((t) => t.isCritical)
-              .map((task) => (
+        {criticalTasks.length > 0 && (
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-critical" />
+              Caminho Crítico
+            </h3>
+            <div className="space-y-2">
+              {criticalTasks.map((task) => (
                 <div
                   key={task.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
@@ -242,9 +294,19 @@ export default function ProjectView() {
                   </div>
                 </div>
               ))}
-          </div>
-        </Card>
+            </div>
+          </Card>
+        )}
       </div>
+
+      <TaskDialog
+        open={taskDialogOpen}
+        onOpenChange={setTaskDialogOpen}
+        onSave={handleSaveTask}
+        task={selectedTask}
+        projectId={id || ""}
+        tasks={tasks}
+      />
     </div>
   );
 }

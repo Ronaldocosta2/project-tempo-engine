@@ -3,61 +3,16 @@ import { Header } from "@/components/Header";
 import { ProjectCard } from "@/components/ProjectCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useProjects } from "@/hooks/useProjects";
 import { Search, Filter } from "lucide-react";
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Mock data - em produção viria do backend
-  const projects = [
-    {
-      id: "1",
-      name: "Sistema de Gestão Empresarial",
-      description: "Desenvolvimento completo de ERP com módulos financeiro, RH e vendas",
-      startDate: "01/03/2025",
-      endDate: "30/11/2025",
-      progress: 35,
-      tasksCount: 127,
-      teamSize: 12,
-      status: "on-track" as const,
-    },
-    {
-      id: "2",
-      name: "Migração de Infraestrutura Cloud",
-      description: "Migração completa dos servidores on-premise para AWS com arquitetura serverless",
-      startDate: "15/02/2025",
-      endDate: "30/06/2025",
-      progress: 62,
-      tasksCount: 85,
-      teamSize: 8,
-      status: "on-track" as const,
-    },
-    {
-      id: "3",
-      name: "App Mobile de Vendas",
-      description: "Aplicativo mobile para força de vendas com integração CRM e offline-first",
-      startDate: "01/04/2025",
-      endDate: "31/08/2025",
-      progress: 18,
-      tasksCount: 94,
-      teamSize: 6,
-      status: "at-risk" as const,
-    },
-    {
-      id: "4",
-      name: "Portal do Cliente B2B",
-      description: "Portal web responsivo para clientes com área de pedidos, histórico e suporte",
-      startDate: "10/01/2025",
-      endDate: "31/05/2025",
-      progress: 78,
-      tasksCount: 56,
-      teamSize: 5,
-      status: "delayed" as const,
-    },
-  ];
+  const { data: projects = [], isLoading } = useProjects();
 
   const filteredProjects = projects.filter((project) =>
-    project.name.toLowerCase().includes(searchQuery.toLowerCase())
+    project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    project.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -95,16 +50,31 @@ export default function Index() {
         </div>
 
         {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-          {filteredProjects.map((project) => (
-            <ProjectCard key={project.id} {...project} />
-          ))}
-        </div>
-
-        {filteredProjects.length === 0 && (
+        {isLoading ? (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground text-lg">Carregando projetos...</p>
+          </div>
+        ) : filteredProjects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+            {filteredProjects.map((project) => (
+              <ProjectCard 
+                key={project.id}
+                id={project.id}
+                name={project.name}
+                description={project.description || ""}
+                startDate={new Date(project.start_date).toLocaleDateString("pt-BR")}
+                endDate={new Date(project.end_date).toLocaleDateString("pt-BR")}
+                progress={project.progress}
+                status={project.status as "on-track" | "at-risk" | "delayed"}
+                tasksCount={0}
+                teamSize={project.team_size}
+              />
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-16">
             <p className="text-muted-foreground text-lg">
-              Nenhum projeto encontrado
+              {searchQuery ? "Nenhum projeto encontrado" : "Nenhum projeto cadastrado ainda"}
             </p>
           </div>
         )}
