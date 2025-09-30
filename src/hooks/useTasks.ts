@@ -32,6 +32,12 @@ export interface Task {
   baseline_duration?: number;
   baseline_start_date?: string;
   baseline_end_date?: string;
+  priority_business?: number;
+  sla_critical?: boolean;
+  is_milestone?: boolean;
+  client_importance?: number;
+  capacity_percent?: number;
+  effort_hours?: number;
 }
 
 export const useTasks = (projectId: string) => {

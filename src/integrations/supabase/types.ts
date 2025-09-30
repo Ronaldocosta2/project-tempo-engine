@@ -643,6 +643,76 @@ export type Database = {
           },
         ]
       }
+      task_conflicts: {
+        Row: {
+          conflict_type: string
+          created_at: string | null
+          details: Json | null
+          detected_at: string | null
+          id: string
+          project_id: string
+          resolution_action: string | null
+          resolved_at: string | null
+          severity: string | null
+          status: string | null
+          task_a_id: string
+          task_b_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          conflict_type: string
+          created_at?: string | null
+          details?: Json | null
+          detected_at?: string | null
+          id?: string
+          project_id: string
+          resolution_action?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          task_a_id: string
+          task_b_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          conflict_type?: string
+          created_at?: string | null
+          details?: Json | null
+          detected_at?: string | null
+          id?: string
+          project_id?: string
+          resolution_action?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          task_a_id?: string
+          task_b_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_conflicts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_conflicts_task_a_id_fkey"
+            columns: ["task_a_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_conflicts_task_b_id_fkey"
+            columns: ["task_b_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_dependencies: {
         Row: {
           created_at: string | null
@@ -730,15 +800,19 @@ export type Database = {
           baseline_end_date: string | null
           baseline_start_date: string | null
           buffer_id: string | null
+          capacity_percent: number | null
+          client_importance: number | null
           constraint_date: string | null
           constraint_type: string | null
           created_at: string | null
           duration: number
           early_finish: string | null
           early_start: string | null
+          effort_hours: number | null
           end_date: string
           id: string
           is_critical: boolean | null
+          is_milestone: boolean | null
           late_finish: string | null
           late_start: string | null
           most_likely_duration: number | null
@@ -746,9 +820,11 @@ export type Database = {
           optimistic_duration: number | null
           parent_id: string | null
           pessimistic_duration: number | null
+          priority_business: number | null
           progress: number | null
           project_id: string
           resource_id: string | null
+          sla_critical: boolean | null
           slack: number | null
           start_date: string
           status: string
@@ -761,15 +837,19 @@ export type Database = {
           baseline_end_date?: string | null
           baseline_start_date?: string | null
           buffer_id?: string | null
+          capacity_percent?: number | null
+          client_importance?: number | null
           constraint_date?: string | null
           constraint_type?: string | null
           created_at?: string | null
           duration: number
           early_finish?: string | null
           early_start?: string | null
+          effort_hours?: number | null
           end_date: string
           id?: string
           is_critical?: boolean | null
+          is_milestone?: boolean | null
           late_finish?: string | null
           late_start?: string | null
           most_likely_duration?: number | null
@@ -777,9 +857,11 @@ export type Database = {
           optimistic_duration?: number | null
           parent_id?: string | null
           pessimistic_duration?: number | null
+          priority_business?: number | null
           progress?: number | null
           project_id: string
           resource_id?: string | null
+          sla_critical?: boolean | null
           slack?: number | null
           start_date: string
           status?: string
@@ -792,15 +874,19 @@ export type Database = {
           baseline_end_date?: string | null
           baseline_start_date?: string | null
           buffer_id?: string | null
+          capacity_percent?: number | null
+          client_importance?: number | null
           constraint_date?: string | null
           constraint_type?: string | null
           created_at?: string | null
           duration?: number
           early_finish?: string | null
           early_start?: string | null
+          effort_hours?: number | null
           end_date?: string
           id?: string
           is_critical?: boolean | null
+          is_milestone?: boolean | null
           late_finish?: string | null
           late_start?: string | null
           most_likely_duration?: number | null
@@ -808,9 +894,11 @@ export type Database = {
           optimistic_duration?: number | null
           parent_id?: string | null
           pessimistic_duration?: number | null
+          priority_business?: number | null
           progress?: number | null
           project_id?: string
           resource_id?: string | null
+          sla_critical?: boolean | null
           slack?: number | null
           start_date?: string
           status?: string

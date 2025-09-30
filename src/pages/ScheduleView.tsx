@@ -9,6 +9,7 @@ import { MindMapView } from "@/components/MindMapView";
 import { TaskDialog } from "@/components/TaskDialog";
 import { TaskImportDialog } from "@/components/TaskImportDialog";
 import { ScheduleMetrics } from "@/components/ScheduleMetrics";
+import { ConflictsPanel } from "@/components/ConflictsPanel";
 import { useProject } from "@/hooks/useProjects";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
 import {
@@ -211,6 +212,9 @@ export default function ScheduleView() {
 
         {/* Schedule Metrics - Motor de Agendamento */}
         <ScheduleMetrics projectId={id || ""} onRecalculate={handleRecalculate} />
+
+        {/* Conflicts and Priorities Panel */}
+        <ConflictsPanel projectId={id || ""} tasks={tasks} />
 
         {/* Tabs para Gantt e Mapa Mental */}
         <Tabs defaultValue="gantt" className="space-y-4">
