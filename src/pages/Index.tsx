@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Header } from "@/components/Header";
 import { ProjectCard } from "@/components/ProjectCard";
+import { ProjectFormDialog } from "@/components/ProjectFormDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProjects } from "@/hooks/useProjects";
@@ -8,6 +9,7 @@ import { Search, Filter } from "lucide-react";
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: projects = [], isLoading } = useProjects();
 
   const filteredProjects = projects.filter((project) =>
@@ -17,7 +19,8 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary-light/30 to-secondary-light/20">
-      <Header onNewProject={() => console.log("Novo projeto")} />
+      <Header onNewProject={() => setIsDialogOpen(true)} />
+      <ProjectFormDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
 
       <main className="container py-12 px-8">
         {/* Hero Section */}
