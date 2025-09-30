@@ -88,6 +88,135 @@ export type Database = {
           },
         ]
       }
+      baselines: {
+        Row: {
+          created_at: string | null
+          data: Json
+          id: string
+          is_active: boolean | null
+          name: string
+          project_id: string
+          snapshot_date: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          id?: string
+          is_active?: boolean | null
+          name: string
+          project_id: string
+          snapshot_date?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          project_id?: string
+          snapshot_date?: string | null
+        }
+        Relationships: []
+      }
+      buffers: {
+        Row: {
+          consumed: number | null
+          created_at: string | null
+          duration: number
+          id: string
+          name: string
+          project_id: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          consumed?: number | null
+          created_at?: string | null
+          duration: number
+          id?: string
+          name: string
+          project_id: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          consumed?: number | null
+          created_at?: string | null
+          duration?: number
+          id?: string
+          name?: string
+          project_id?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      calendars: {
+        Row: {
+          created_at: string | null
+          holidays: string[] | null
+          id: string
+          name: string
+          project_id: string
+          updated_at: string | null
+          working_days: number[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          holidays?: string[] | null
+          id?: string
+          name: string
+          project_id: string
+          updated_at?: string | null
+          working_days?: number[] | null
+        }
+        Update: {
+          created_at?: string | null
+          holidays?: string[] | null
+          id?: string
+          name?: string
+          project_id?: string
+          updated_at?: string | null
+          working_days?: number[] | null
+        }
+        Relationships: []
+      }
+      decisions: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string
+          id: string
+          impact_type: string | null
+          impact_value: Json | null
+          meeting_id: string | null
+          project_id: string
+          task_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          id?: string
+          impact_type?: string | null
+          impact_value?: Json | null
+          meeting_id?: string | null
+          project_id: string
+          task_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          id?: string
+          impact_type?: string | null
+          impact_value?: Json | null
+          meeting_id?: string | null
+          project_id?: string
+          task_id?: string | null
+        }
+        Relationships: []
+      }
       meeting_participants: {
         Row: {
           attendance: string | null
@@ -222,6 +351,39 @@ export type Database = {
         }
         Relationships: []
       }
+      resources: {
+        Row: {
+          calendar_id: string | null
+          created_at: string | null
+          daily_capacity: number | null
+          id: string
+          name: string
+          project_id: string
+          skills: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          calendar_id?: string | null
+          created_at?: string | null
+          daily_capacity?: number | null
+          id?: string
+          name: string
+          project_id: string
+          skills?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          calendar_id?: string | null
+          created_at?: string | null
+          daily_capacity?: number | null
+          id?: string
+          name?: string
+          project_id?: string
+          skills?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       stakeholders: {
         Row: {
           communication_preference: string | null
@@ -287,19 +449,25 @@ export type Database = {
       task_dependencies: {
         Row: {
           created_at: string | null
+          dependency_type: string | null
           id: string
+          lag_days: number | null
           predecessor_id: string
           successor_id: string
         }
         Insert: {
           created_at?: string | null
+          dependency_type?: string | null
           id?: string
+          lag_days?: number | null
           predecessor_id: string
           successor_id: string
         }
         Update: {
           created_at?: string | null
+          dependency_type?: string | null
           id?: string
+          lag_days?: number | null
           predecessor_id?: string
           successor_id?: string
         }
@@ -361,48 +529,96 @@ export type Database = {
       }
       tasks: {
         Row: {
+          baseline_duration: number | null
+          baseline_end_date: string | null
+          baseline_start_date: string | null
+          buffer_id: string | null
+          constraint_date: string | null
+          constraint_type: string | null
           created_at: string | null
           duration: number
+          early_finish: string | null
+          early_start: string | null
           end_date: string
           id: string
           is_critical: boolean | null
+          late_finish: string | null
+          late_start: string | null
+          most_likely_duration: number | null
           name: string
+          optimistic_duration: number | null
           parent_id: string | null
+          pessimistic_duration: number | null
           progress: number | null
           project_id: string
+          resource_id: string | null
+          slack: number | null
           start_date: string
           status: string
           updated_at: string | null
+          use_pert: boolean | null
           wbs: string
         }
         Insert: {
+          baseline_duration?: number | null
+          baseline_end_date?: string | null
+          baseline_start_date?: string | null
+          buffer_id?: string | null
+          constraint_date?: string | null
+          constraint_type?: string | null
           created_at?: string | null
           duration: number
+          early_finish?: string | null
+          early_start?: string | null
           end_date: string
           id?: string
           is_critical?: boolean | null
+          late_finish?: string | null
+          late_start?: string | null
+          most_likely_duration?: number | null
           name: string
+          optimistic_duration?: number | null
           parent_id?: string | null
+          pessimistic_duration?: number | null
           progress?: number | null
           project_id: string
+          resource_id?: string | null
+          slack?: number | null
           start_date: string
           status?: string
           updated_at?: string | null
+          use_pert?: boolean | null
           wbs: string
         }
         Update: {
+          baseline_duration?: number | null
+          baseline_end_date?: string | null
+          baseline_start_date?: string | null
+          buffer_id?: string | null
+          constraint_date?: string | null
+          constraint_type?: string | null
           created_at?: string | null
           duration?: number
+          early_finish?: string | null
+          early_start?: string | null
           end_date?: string
           id?: string
           is_critical?: boolean | null
+          late_finish?: string | null
+          late_start?: string | null
+          most_likely_duration?: number | null
           name?: string
+          optimistic_duration?: number | null
           parent_id?: string | null
+          pessimistic_duration?: number | null
           progress?: number | null
           project_id?: string
+          resource_id?: string | null
+          slack?: number | null
           start_date?: string
           status?: string
           updated_at?: string | null
+          use_pert?: boolean | null
           wbs?: string
         }
         Relationships: [

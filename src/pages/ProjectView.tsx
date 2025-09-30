@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GanttChart } from "@/components/GanttChart";
 import { MindMapView } from "@/components/MindMapView";
 import { TaskDialog } from "@/components/TaskDialog";
+import { ScheduleMetrics } from "@/components/ScheduleMetrics";
 import { useProject } from "@/hooks/useProjects";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
 import {
@@ -73,6 +74,11 @@ export default function ProjectView() {
   const handleNewTask = () => {
     setSelectedTask(null);
     setTaskDialogOpen(true);
+  };
+
+  const handleRecalculate = () => {
+    // Recarregar tarefas após recálculo
+    window.location.reload();
   };
 
   const criticalTasks = tasks.filter((t) => t.is_critical);
@@ -181,6 +187,9 @@ export default function ProjectView() {
             </Card>
           ))}
         </div>
+
+        {/* Schedule Metrics - Motor de Agendamento */}
+        <ScheduleMetrics projectId={id || ""} onRecalculate={handleRecalculate} />
 
         {/* Tabs para Gantt e Mapa Mental */}
         <Tabs defaultValue="gantt" className="space-y-4">

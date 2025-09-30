@@ -16,6 +16,22 @@ export interface Task {
   parent_id: string | null;
   created_at?: string;
   updated_at?: string;
+  optimistic_duration?: number;
+  most_likely_duration?: number;
+  pessimistic_duration?: number;
+  use_pert?: boolean;
+  early_start?: string;
+  early_finish?: string;
+  late_start?: string;
+  late_finish?: string;
+  slack?: number;
+  constraint_type?: string;
+  constraint_date?: string;
+  resource_id?: string;
+  buffer_id?: string;
+  baseline_duration?: number;
+  baseline_start_date?: string;
+  baseline_end_date?: string;
 }
 
 export const useTasks = (projectId: string) => {
