@@ -194,38 +194,47 @@ export default function GovernancePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <div className="container py-8 px-8 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent-light/20 to-primary-light/10">
+      <div className="container py-10 px-8 space-y-8 animate-fade-in-up">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
+        <div className="flex items-start justify-between backdrop-blur-sm">
+          <div className="space-y-3">
             <Button
               variant="ghost"
               onClick={() => navigate(`/project/${id}`)}
-              className="mb-2 -ml-2"
+              className="mb-2 -ml-2 hover:bg-card/50 transition-all hover:scale-105"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar ao Projeto
             </Button>
-            <h1 className="text-3xl font-bold text-foreground">
-              Governança & Engajamento
-            </h1>
-            <p className="text-muted-foreground">
-              Gerencie stakeholders, reuniões e combinados
-            </p>
+            <div className="relative">
+              <div className="absolute -top-6 -left-6 w-24 h-24 bg-accent/10 rounded-full blur-2xl" />
+              <h1 className="text-4xl font-bold text-foreground relative">
+                Governança & Engajamento
+              </h1>
+              <p className="text-muted-foreground text-lg mt-2 relative">
+                Gerencie stakeholders, reuniões e combinados
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-4 gap-4">
-          {stats.map((stat) => (
-            <Card key={stat.label} className="p-4">
+        <div className="grid grid-cols-4 gap-6">
+          {stats.map((stat, index) => (
+            <Card 
+              key={stat.label} 
+              className="p-5 shadow-lg border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-all hover:scale-105 animate-fade-in-up"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
-                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground mb-2 font-medium uppercase tracking-wider">{stat.label}</p>
+                  <p className="text-3xl font-bold text-foreground">{stat.value}</p>
                 </div>
-                <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                  <stat.icon className={`h-7 w-7 ${stat.color}`} />
+                </div>
               </div>
             </Card>
           ))}

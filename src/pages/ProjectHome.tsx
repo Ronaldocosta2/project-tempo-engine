@@ -57,21 +57,33 @@ export default function ProjectHome() {
   const pendingActions = actionItems.filter((a) => a.status === "pendente");
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <div className="container py-8 px-8 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary-light/20 to-accent-light/10">
+      <div className="container py-10 px-8 space-y-8 animate-fade-in-up">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/")} className="-ml-2">
+        <div className="flex items-center justify-between backdrop-blur-sm">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/")} 
+            className="-ml-2 hover:bg-card/50 transition-all hover:scale-105"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar aos Projetos
           </Button>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate(`/project/${id}/schedule`)}>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate(`/project/${id}/schedule`)}
+              className="shadow-sm hover:shadow-md transition-all hover:scale-105 border-border/50 bg-card/50 backdrop-blur-sm"
+            >
               <Calendar className="h-4 w-4 mr-2" />
               Cronograma Gantt
             </Button>
-            <Button variant="outline" onClick={() => navigate(`/project/${id}/governance`)}>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate(`/project/${id}/governance`)}
+              className="shadow-sm hover:shadow-md transition-all hover:scale-105 border-border/50 bg-card/50 backdrop-blur-sm"
+            >
               <UserCheck className="h-4 w-4 mr-2" />
               Governança
             </Button>
@@ -88,7 +100,7 @@ export default function ProjectHome() {
             <ProjectStory projectId={id || ""} context={context || null} />
 
             {/* Recent Activity */}
-            <Card>
+            <Card className="shadow-lg border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-shadow">
               <CardContent className="pt-6">
                 <Tabs defaultValue="meetings">
                   <TabsList className="grid w-full grid-cols-2">
@@ -159,11 +171,13 @@ export default function ProjectHome() {
               criticalTasksCount={criticalTasks.length}
             />
 
-            <Card>
+            <Card className="shadow-lg border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Users className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold">Stakeholders</h3>
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Stakeholders</h3>
                 </div>
                 {stakeholders.length > 0 ? (
                   <div className="space-y-2">
@@ -192,11 +206,13 @@ export default function ProjectHome() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-lg border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold">Próximos Marcos</h3>
+                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+                    <BarChart3 className="h-5 w-5 text-accent" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Próximos Marcos</h3>
                 </div>
                 {criticalTasks.length > 0 ? (
                   <div className="space-y-2">
