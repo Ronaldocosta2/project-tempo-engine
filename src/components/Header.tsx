@@ -12,28 +12,25 @@ export const Header = ({ onNewProject }: HeaderProps) => {
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container flex h-16 items-center justify-between px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <LayoutDashboard className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                GanttFlow
-              </h1>
+        <div className="container flex h-14 items-center justify-between px-6">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-gradient-primary flex items-center justify-center">
+              <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
             </div>
+            <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              GanttFlow
+            </h1>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              variant="default"
-              onClick={() => (onNewProject ? onNewProject() : setOpen(true))}
-              className="shadow-primary"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Projeto
-            </Button>
-          </div>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => (onNewProject ? onNewProject() : setOpen(true))}
+            className="shadow-primary h-9"
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            Novo Projeto
+          </Button>
         </div>
       </header>
 
