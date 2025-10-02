@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, LayoutDashboard, LogOut } from "lucide-react";
 import { ProjectFormDialog } from "@/components/ProjectFormDialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 interface HeaderProps {
   onNewProject?: () => void;
@@ -12,6 +13,7 @@ interface HeaderProps {
 export const Header = ({ onNewProject }: HeaderProps) => {
   const [open, setOpen] = useState(false);
   const { signOut, user } = useAuth();
+  const { isAdmin } = useAdminRole();
   
   return (
     <>
@@ -41,6 +43,16 @@ export const Header = ({ onNewProject }: HeaderProps) => {
               <Plus className="h-4 w-4 mr-1.5" />
               Novo Projeto
             </Button>
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="h-9"
+              >
+                <Link to="/admin">Admin</Link>
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"

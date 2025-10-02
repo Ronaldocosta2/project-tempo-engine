@@ -29,6 +29,17 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Update last_login_at when user logs in
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('profiles')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', user.id)
+        .then(() => {});
+    }
+  }, [user?.id]);
+
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
