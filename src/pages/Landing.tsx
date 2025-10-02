@@ -4,13 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { FolderKanban, Calendar, Users, BarChart3, Shield, Workflow } from "lucide-react";
+import { FolderKanban, Calendar, Users, BarChart3, Shield, Workflow, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [password, setPassword] = useState("");
 
   const handleAccessDashboard = () => {
@@ -101,8 +102,17 @@ export default function Landing() {
               size="lg" 
               variant="outline"
               className="text-base px-8"
+              onClick={() => setIsAboutDialogOpen(true)}
             >
               Saiba Mais
+            </Button>
+            <Button 
+              size="lg" 
+              variant="secondary"
+              className="text-base px-8"
+              onClick={() => navigate("/pricing")}
+            >
+              Ver Planos
             </Button>
           </div>
         </div>
@@ -189,6 +199,115 @@ export default function Landing() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAboutDialogOpen} onOpenChange={setIsAboutDialogOpen}>
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Sobre o Sistema de Gestão de Projetos</DialogTitle>
+            <DialogDescription className="text-base mt-4">
+              Uma plataforma completa para gerenciar seus projetos de forma estratégica e eficiente
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 mt-4">
+            <div>
+              <h3 className="font-semibold text-lg text-foreground mb-2">O que é?</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Nossa plataforma é uma solução completa de gestão de projetos que combina metodologias ágeis 
+                com governança corporativa. Desenvolvida para atender desde pequenas equipes até grandes organizações, 
+                oferece ferramentas avançadas para planejamento, execução e monitoramento de projetos complexos.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg text-foreground mb-3">Principais Funcionalidades</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {features.map((feature, index) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div key={index} className="flex gap-3 p-3 rounded-lg bg-muted/50">
+                      <div className="p-2 rounded-lg bg-primary/10 h-fit">
+                        <Icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">{feature.title}</h4>
+                        <p className="text-sm text-muted-foreground">{feature.description}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg text-foreground mb-2">Benefícios</h3>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2 text-muted-foreground">
+                  <div className="rounded-full bg-success/10 p-1 mt-0.5">
+                    <Check className="h-3 w-3 text-success" />
+                  </div>
+                  <span>Aumente a produtividade da equipe em até 40% com automação inteligente</span>
+                </li>
+                <li className="flex items-start gap-2 text-muted-foreground">
+                  <div className="rounded-full bg-success/10 p-1 mt-0.5">
+                    <Check className="h-3 w-3 text-success" />
+                  </div>
+                  <span>Reduza riscos e conflitos com detecção automática e alertas proativos</span>
+                </li>
+                <li className="flex items-start gap-2 text-muted-foreground">
+                  <div className="rounded-full bg-success/10 p-1 mt-0.5">
+                    <Check className="h-3 w-3 text-success" />
+                  </div>
+                  <span>Melhore a comunicação com stakeholders através de dashboards em tempo real</span>
+                </li>
+                <li className="flex items-start gap-2 text-muted-foreground">
+                  <div className="rounded-full bg-success/10 p-1 mt-0.5">
+                    <Check className="h-3 w-3 text-success" />
+                  </div>
+                  <span>Tome decisões baseadas em dados com KPIs e métricas personalizadas</span>
+                </li>
+                <li className="flex items-start gap-2 text-muted-foreground">
+                  <div className="rounded-full bg-success/10 p-1 mt-0.5">
+                    <Check className="h-3 w-3 text-success" />
+                  </div>
+                  <span>Garanta compliance e governança com gestão integrada de riscos e issues</span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg text-foreground mb-2">Para quem é?</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Ideal para gerentes de projeto, PMOs, diretores de operações e equipes que precisam de 
+                visibilidade completa sobre seus projetos. Desde startups ágeis até grandes corporações 
+                com múltiplos projetos simultâneos.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-4 border-t border-border">
+              <Button 
+                className="flex-1" 
+                onClick={() => {
+                  setIsAboutDialogOpen(false);
+                  navigate("/pricing");
+                }}
+              >
+                Ver Planos e Preços
+              </Button>
+              <Button 
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setIsAboutDialogOpen(false);
+                  handleAccessDashboard();
+                }}
+              >
+                Acessar Agora
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
