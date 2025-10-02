@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, LayoutDashboard } from "lucide-react";
+import { Plus, LayoutDashboard, LogOut } from "lucide-react";
 import { ProjectFormDialog } from "@/components/ProjectFormDialog";
+import { useAuth } from "@/hooks/useAuth";
+
 interface HeaderProps {
   onNewProject?: () => void;
 }
 
 export const Header = ({ onNewProject }: HeaderProps) => {
   const [open, setOpen] = useState(false);
+  const { signOut, user } = useAuth();
   
   return (
     <>
@@ -23,15 +26,31 @@ export const Header = ({ onNewProject }: HeaderProps) => {
             </h1>
           </Link>
 
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => (onNewProject ? onNewProject() : setOpen(true))}
-            className="shadow-primary h-9"
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Novo Projeto
-          </Button>
+          <div className="flex items-center gap-3">
+            {user && (
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                {user.email}
+              </span>
+            )}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => (onNewProject ? onNewProject() : setOpen(true))}
+              className="shadow-primary h-9"
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              Novo Projeto
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={signOut}
+              className="h-9"
+            >
+              <LogOut className="h-4 w-4 mr-1.5" />
+              Sair
+            </Button>
+          </div>
         </div>
       </header>
 

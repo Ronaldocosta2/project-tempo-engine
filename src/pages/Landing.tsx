@@ -23,7 +23,7 @@ export default function Landing() {
     
     if (password === "Ron@ldo2789") {
       setIsPasswordDialogOpen(false);
-      navigate("/dashboard");
+      navigate("/auth");
     } else {
       toast({
         variant: "destructive",

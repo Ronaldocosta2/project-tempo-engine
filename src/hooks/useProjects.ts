@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "./useAuth";
 
 export interface Project {
   id: string;
@@ -17,17 +18,23 @@ export interface Project {
 }
 
 export const useProjects = () => {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ["projects"],
+    queryKey: ["projects", user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data, error } = await supabase
         .from("projects")
         .select("*")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as Project[];
     },
+    enabled: !!user?.id,
   });
 };
 
@@ -50,12 +57,15 @@ export const useProject = (id: string) => {
 
 export const useCreateProject = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (project: Omit<Project, "id" | "created_at" | "updated_at">) => {
+      if (!user?.id) throw new Error("User not authenticated");
+      
       const { data, error } = await supabase
         .from("projects")
-        .insert(project)
+        .insert({ ...project, user_id: user.id })
         .select()
         .single();
 

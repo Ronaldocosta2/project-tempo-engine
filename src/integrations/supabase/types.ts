@@ -309,6 +309,33 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       project_context: {
         Row: {
           attachments: Json | null
@@ -519,6 +546,7 @@ export type Database = {
           status: string
           team_size: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           budget?: string | null
@@ -532,6 +560,7 @@ export type Database = {
           status?: string
           team_size?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           budget?: string | null
@@ -545,6 +574,7 @@ export type Database = {
           status?: string
           team_size?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
