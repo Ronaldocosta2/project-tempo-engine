@@ -1,10 +1,38 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { FolderKanban, Calendar, Users, BarChart3, Shield, Workflow } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [password, setPassword] = useState("");
+
+  const handleAccessDashboard = () => {
+    setIsPasswordDialogOpen(true);
+    setPassword("");
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (password === "Ron@ldo2789") {
+      setIsPasswordDialogOpen(false);
+      navigate("/dashboard");
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Acesso Negado",
+        description: "Senha inválida. Entre em contato com o administrador do sistema.",
+      });
+      setPassword("");
+    }
+  };
 
   const features = [
     {
@@ -64,7 +92,7 @@ export default function Landing() {
           <div className="flex gap-4 justify-center pt-6">
             <Button 
               size="lg" 
-              onClick={() => navigate("/dashboard")}
+              onClick={handleAccessDashboard}
               className="text-base px-8"
             >
               Acessar Dashboard
@@ -131,6 +159,38 @@ export default function Landing() {
           </p>
         </div>
       </div>
+
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Acesso ao Sistema</DialogTitle>
+            <DialogDescription>
+              Digite a senha para acessar o dashboard
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Digite a senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsPasswordDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Acessar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
