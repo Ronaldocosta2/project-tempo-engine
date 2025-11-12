@@ -22,8 +22,17 @@ interface GanttChartProps {
 }
 
 export const GanttChart = ({ tasks }: GanttChartProps) => {
+  // Ordenar tarefas: críticas primeiro, depois com dependências, depois as demais
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (a.isCritical && !b.isCritical) return -1;
+    if (!a.isCritical && b.isCritical) return 1;
+    if (a.dependencies?.length && !b.dependencies?.length) return -1;
+    if (!a.dependencies?.length && b.dependencies?.length) return 1;
+    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+  });
+
   // Calcular range de datas para o timeline
-  const allDates = tasks.flatMap((t) => [new Date(t.startDate), new Date(t.endDate)]);
+  const allDates = sortedTasks.flatMap((t) => [new Date(t.startDate), new Date(t.endDate)]);
   const minDate = new Date(Math.min(...allDates.map((d) => d.getTime())));
   const maxDate = new Date(Math.max(...allDates.map((d) => d.getTime())));
   
@@ -39,6 +48,9 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
     }
     currentDate.setMonth(currentDate.getMonth() + 1);
   }
+
+  // Criar mapa de índices de tarefas para desenhar dependências
+  const taskIndexMap = new Map(sortedTasks.map((task, idx) => [task.id, idx]));
 
   const calculatePosition = (date: string) => {
     const taskDate = new Date(date);
@@ -68,14 +80,15 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
     <Card className="overflow-hidden">
       <div className="flex">
         {/* Coluna de tarefas */}
-        <div className="w-96 border-r bg-muted/30">
+        <div className="w-[500px] border-r bg-muted/30">
           <div className="h-16 border-b bg-card flex items-center px-4 font-semibold text-sm sticky top-0">
             <div className="w-16">WBS</div>
             <div className="flex-1">Tarefa</div>
-            <div className="w-20 text-center">Duração</div>
+            <div className="w-24 text-center">Duração</div>
+            <div className="w-32 text-center">Dependências</div>
           </div>
           <div className="divide-y">
-            {tasks.map((task) => (
+            {sortedTasks.map((task) => (
               <div
                 key={task.id}
                 className="h-12 flex items-center px-4 hover:bg-muted/50 transition-colors text-sm group"
@@ -90,8 +103,36 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
                     </Badge>
                   )}
                 </div>
-                <div className="w-20 text-center text-muted-foreground">
+                <div className="w-24 text-center text-muted-foreground">
                   {task.duration}d
+                </div>
+                <div className="w-32 text-center">
+                  {task.dependencies && task.dependencies.length > 0 ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="secondary" className="text-xs cursor-help">
+                            {task.dependencies.length} dep.
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <div className="text-sm">
+                            <div className="font-semibold mb-1">Depende de:</div>
+                            {task.dependencies.map((depId) => {
+                              const depTask = sortedTasks.find((t) => t.id === depId);
+                              return depTask ? (
+                                <div key={depId} className="text-xs">
+                                  {depTask.wbs} - {depTask.name}
+                                </div>
+                              ) : null;
+                            })}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">-</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -122,7 +163,56 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
                 ))}
               </div>
 
-              {tasks.map((task) => {
+              {/* Linhas de dependência */}
+              <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+                {sortedTasks.map((task) => {
+                  if (!task.dependencies || task.dependencies.length === 0) return null;
+                  
+                  return task.dependencies.map((depId) => {
+                    const depTask = sortedTasks.find((t) => t.id === depId);
+                    if (!depTask) return null;
+
+                    const sourceIndex = taskIndexMap.get(depId);
+                    const targetIndex = taskIndexMap.get(task.id);
+                    
+                    if (sourceIndex === undefined || targetIndex === undefined) return null;
+
+                    const sourceY = (sourceIndex * 48) + 24 + 16; // 48px height + center + header
+                    const targetY = (targetIndex * 48) + 24 + 16;
+                    
+                    const sourceX = calculatePosition(depTask.endDate);
+                    const targetX = calculatePosition(task.startDate);
+
+                    return (
+                      <g key={`${task.id}-${depId}`}>
+                        <defs>
+                          <marker
+                            id={`arrow-${task.id}-${depId}`}
+                            markerWidth="10"
+                            markerHeight="10"
+                            refX="9"
+                            refY="3"
+                            orient="auto"
+                            markerUnits="strokeWidth"
+                          >
+                            <path d="M0,0 L0,6 L9,3 z" fill="hsl(var(--primary))" />
+                          </marker>
+                        </defs>
+                        <path
+                          d={`M ${sourceX}% ${sourceY} L ${(sourceX + targetX) / 2}% ${sourceY} L ${(sourceX + targetX) / 2}% ${targetY} L ${targetX}% ${targetY}`}
+                          stroke="hsl(var(--primary))"
+                          strokeWidth="2"
+                          fill="none"
+                          markerEnd={`url(#arrow-${task.id}-${depId})`}
+                          opacity="0.6"
+                        />
+                      </g>
+                    );
+                  });
+                })}
+              </svg>
+
+              {sortedTasks.map((task) => {
                 const left = calculatePosition(task.startDate);
                 const width = calculateWidth(task.startDate, task.endDate);
                 const isDelayed = task.status === "completed" && task.actualEndDate && 
