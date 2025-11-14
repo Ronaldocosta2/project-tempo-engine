@@ -26,14 +26,17 @@ interface Task {
 interface GanttChartProps {
   tasks: Task[];
   onTasksChange?: (tasks: Task[]) => void;
+  onTaskUpdate?: (taskId: string, updates: Partial<Task>) => void;
 }
 
 type ZoomMode = 'day' | 'month' | 'quarter';
 
-export const GanttChart = ({ tasks, onTasksChange }: GanttChartProps) => {
+export const GanttChart = ({ tasks, onTasksChange, onTaskUpdate }: GanttChartProps) => {
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   const [zoomMode, setZoomMode] = useState<ZoomMode>('month');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [editingCell, setEditingCell] = useState<{ taskId: string; field: string } | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
 
   const toggleExpand = (taskId: string) => {
     const newExpanded = new Set(expandedTasks);
@@ -57,6 +60,38 @@ export const GanttChart = ({ tasks, onTasksChange }: GanttChartProps) => {
   const handleImportTasks = (importedTasks: Task[]) => {
     const tasksWithProgress = calculateAllTasksProgress(importedTasks);
     onTasksChange?.(tasksWithProgress);
+  };
+
+  const startEditing = (taskId: string, field: string, currentValue: string) => {
+    setEditingCell({ taskId, field });
+    setEditValue(currentValue);
+  };
+
+  const saveEdit = (taskId: string, field: string) => {
+    if (!onTaskUpdate) return;
+    
+    const updates: Partial<Task> = {};
+    
+    if (field === 'name') {
+      updates.name = editValue;
+    } else if (field === 'startDate') {
+      updates.startDate = editValue;
+    } else if (field === 'endDate') {
+      updates.endDate = editValue;
+    } else if (field === 'progress') {
+      updates.progress = parseInt(editValue) || 0;
+    } else if (field === 'resources') {
+      updates.resources = editValue;
+    }
+    
+    onTaskUpdate(taskId, updates);
+    setEditingCell(null);
+    setEditValue("");
+  };
+
+  const cancelEdit = () => {
+    setEditingCell(null);
+    setEditValue("");
   };
 
   const handleZoomIn = () => {
@@ -153,9 +188,9 @@ export const GanttChart = ({ tasks, onTasksChange }: GanttChartProps) => {
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden h-[calc(100vh-300px)] flex flex-col">
       {/* Toolbar */}
-      <div className="h-12 border-b bg-muted/30 flex items-center gap-2 px-4">
+      <div className="h-12 border-b bg-muted/30 flex items-center gap-2 px-4 flex-shrink-0">
         <Button variant="ghost" size="sm" className="h-8">
           <Plus className="h-4 w-4 mr-1" />
           Add
@@ -194,11 +229,11 @@ export const GanttChart = ({ tasks, onTasksChange }: GanttChartProps) => {
         onImport={handleImportTasks}
       />
 
-      <div className="flex">
+      <div className="flex flex-1 overflow-hidden">
         {/* Coluna de tarefas */}
-        <div className="border-r bg-background">
+        <div className="border-r bg-background flex-shrink-0 overflow-y-auto" style={{ width: '720px' }}>
           {/* Header */}
-          <div className="h-[72px] border-b bg-muted/30 flex items-center text-xs font-semibold sticky top-0">
+          <div className="h-[72px] border-b bg-muted/30 flex items-center text-xs font-semibold sticky top-0 z-10">
             <div className="w-12 text-center border-r">ID</div>
             <div className="w-48 px-3 border-r">Task Name</div>
             <div className="w-28 text-center border-r">Start</div>
@@ -218,6 +253,8 @@ export const GanttChart = ({ tasks, onTasksChange }: GanttChartProps) => {
                 className="h-12 flex items-center text-xs hover:bg-muted/50 transition-colors border-b"
               >
                 <div className="w-12 text-center border-r font-mono text-muted-foreground">{idx + 1}</div>
+                
+                {/* Task Name - Editable */}
                 <div className="w-48 px-3 border-r flex items-center gap-1">
                   {task.children && task.children.length > 0 && (
                     <button onClick={() => toggleExpand(task.id)} className="p-0.5">
@@ -228,23 +265,139 @@ export const GanttChart = ({ tasks, onTasksChange }: GanttChartProps) => {
                       )}
                     </button>
                   )}
-                  <span className="truncate font-medium">{task.name}</span>
+                  {editingCell?.taskId === task.id && editingCell?.field === 'name' ? (
+                    <input
+                      type="text"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={() => saveEdit(task.id, 'name')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveEdit(task.id, 'name');
+                        if (e.key === 'Escape') cancelEdit();
+                      }}
+                      autoFocus
+                      className="flex-1 px-1 py-0.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  ) : (
+                    <span 
+                      className="truncate font-medium cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded flex-1"
+                      onClick={() => startEditing(task.id, 'name', task.name)}
+                    >
+                      {task.name}
+                    </span>
+                  )}
                 </div>
-                <div className="w-28 text-center border-r text-muted-foreground">
-                  {new Date(task.startDate).toLocaleDateString("en-CA")}
+
+                {/* Start Date - Editable */}
+                <div className="w-28 text-center border-r">
+                  {editingCell?.taskId === task.id && editingCell?.field === 'startDate' ? (
+                    <input
+                      type="date"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={() => saveEdit(task.id, 'startDate')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveEdit(task.id, 'startDate');
+                        if (e.key === 'Escape') cancelEdit();
+                      }}
+                      autoFocus
+                      className="w-full px-1 py-0.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  ) : (
+                    <span 
+                      className="cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded inline-block text-muted-foreground"
+                      onClick={() => startEditing(task.id, 'startDate', task.startDate)}
+                    >
+                      {new Date(task.startDate).toLocaleDateString("en-CA")}
+                    </span>
+                  )}
                 </div>
-                <div className="w-28 text-center border-r text-muted-foreground">
-                  {new Date(task.endDate).toLocaleDateString("en-CA")}
+
+                {/* End Date - Editable */}
+                <div className="w-28 text-center border-r">
+                  {editingCell?.taskId === task.id && editingCell?.field === 'endDate' ? (
+                    <input
+                      type="date"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={() => saveEdit(task.id, 'endDate')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveEdit(task.id, 'endDate');
+                        if (e.key === 'Escape') cancelEdit();
+                      }}
+                      autoFocus
+                      className="w-full px-1 py-0.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  ) : (
+                    <span 
+                      className="cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded inline-block text-muted-foreground"
+                      onClick={() => startEditing(task.id, 'endDate', task.endDate)}
+                    >
+                      {new Date(task.endDate).toLocaleDateString("en-CA")}
+                    </span>
+                  )}
                 </div>
+
+                {/* Duration - Read only */}
                 <div className="w-24 text-center border-r text-muted-foreground">
                   {task.duration} days
                 </div>
-                <div className="w-24 text-center border-r">{task.progress}</div>
+
+                {/* Progress - Editable */}
+                <div className="w-24 text-center border-r">
+                  {editingCell?.taskId === task.id && editingCell?.field === 'progress' ? (
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={() => saveEdit(task.id, 'progress')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveEdit(task.id, 'progress');
+                        if (e.key === 'Escape') cancelEdit();
+                      }}
+                      autoFocus
+                      className="w-full px-1 py-0.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-primary text-center"
+                    />
+                  ) : (
+                    <span 
+                      className="cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded inline-block"
+                      onClick={() => startEditing(task.id, 'progress', task.progress.toString())}
+                    >
+                      {task.progress}
+                    </span>
+                  )}
+                </div>
+
+                {/* Dependency - Read only */}
                 <div className="w-24 text-center border-r text-muted-foreground">
                   {task.dependencies?.join(", ") || ""}
                 </div>
-                <div className="w-32 text-center border-r text-muted-foreground truncate px-2">
-                  {task.resources || ""}
+
+                {/* Resources - Editable */}
+                <div className="w-32 text-center border-r">
+                  {editingCell?.taskId === task.id && editingCell?.field === 'resources' ? (
+                    <input
+                      type="text"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={() => saveEdit(task.id, 'resources')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveEdit(task.id, 'resources');
+                        if (e.key === 'Escape') cancelEdit();
+                      }}
+                      autoFocus
+                      className="w-full px-1 py-0.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  ) : (
+                    <span 
+                      className="cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded inline-block text-muted-foreground truncate px-2"
+                      onClick={() => startEditing(task.id, 'resources', task.resources || '')}
+                    >
+                      {task.resources || ""}
+                    </span>
+                  )}
                 </div>
                 <div className="w-20 flex items-center justify-center border-r">
                   <div
@@ -258,7 +411,7 @@ export const GanttChart = ({ tasks, onTasksChange }: GanttChartProps) => {
         </div>
 
         {/* Timeline Gantt */}
-        <div className="flex-1 overflow-x-auto">
+        <div className="flex-1 overflow-x-auto overflow-y-auto">
           <div style={{ minWidth: zoomMode === 'day' ? '1200px' : zoomMode === 'month' ? '800px' : '600px' }}>
             {/* Header de períodos */}
             <div className="h-[72px] border-b bg-muted/30 sticky top-0">
