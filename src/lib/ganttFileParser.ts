@@ -14,7 +14,78 @@ export interface GanttTask {
   children?: GanttTask[];
 }
 
+interface GanttJsonTask {
+  TaskID: number;
+  TaskName: string;
+  StartDate: string;
+  EndDate: string;
+  Duration: number;
+  Predecessor: string | null;
+  resources: Array<{ resourceName: string }>;
+  Progress: number;
+  color: string;
+  subtasks?: GanttJsonTask[];
+}
+
+interface GanttJsonFile {
+  data: GanttJsonTask[];
+  resources?: Array<{ resourceName: string }>;
+}
+
 export const parseGanttFile = (content: string): GanttTask[] => {
+  try {
+    // Try to parse as JSON first
+    const jsonData: GanttJsonFile = JSON.parse(content);
+    if (jsonData.data && Array.isArray(jsonData.data)) {
+      return parseJsonFormat(jsonData.data);
+    }
+  } catch (e) {
+    // If JSON parsing fails, try CSV/TSV format
+    return parseCsvFormat(content);
+  }
+  
+  return [];
+};
+
+const parseJsonFormat = (data: GanttJsonTask[], parentWbs: string = ""): GanttTask[] => {
+  const tasks: GanttTask[] = [];
+  
+  data.forEach((item, index) => {
+    const wbs = parentWbs ? `${parentWbs}.${index + 1}` : `${index + 1}`;
+    const dependencies = parsePredecessor(item.Predecessor);
+    const resourcesStr = item.resources?.map(r => r.resourceName).join(", ") || "";
+    
+    const task: GanttTask = {
+      id: item.TaskID.toString(),
+      wbs,
+      name: item.TaskName,
+      startDate: new Date(item.StartDate).toISOString().split('T')[0],
+      endDate: new Date(item.EndDate).toISOString().split('T')[0],
+      duration: item.Duration,
+      progress: item.Progress,
+      isCritical: false,
+      status: determineStatus(item.Progress),
+      dependencies,
+      resources: resourcesStr,
+      color: item.color || undefined,
+      children: item.subtasks ? parseJsonFormat(item.subtasks, wbs) : undefined,
+    };
+    
+    tasks.push(task);
+  });
+  
+  return tasks;
+};
+
+const parsePredecessor = (predecessor: string | null): string[] | undefined => {
+  if (!predecessor) return undefined;
+  
+  // Parse format like "2FS", "3SS", "4,5FS"
+  const matches = predecessor.match(/\d+/g);
+  return matches || undefined;
+};
+
+const parseCsvFormat = (content: string): GanttTask[] => {
   const lines = content.split('\n').filter(line => line.trim());
   const tasks: GanttTask[] = [];
   
@@ -51,7 +122,7 @@ export const parseGanttFile = (content: string): GanttTask[] => {
   }
   
   return tasks;
-};
+}
 
 const parseDate = (dateStr: string): string => {
   if (!dateStr) return new Date().toISOString().split('T')[0];
