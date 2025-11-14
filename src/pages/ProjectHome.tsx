@@ -14,6 +14,7 @@ import { useProjectIssues } from "@/hooks/useProjectIssues";
 import { useStakeholders } from "@/hooks/useStakeholders";
 import { useMeetings } from "@/hooks/useMeetings";
 import { useActionItems } from "@/hooks/useActionItems";
+import { GanttChart } from "@/components/GanttChart";
 import {
   ArrowLeft,
   Calendar,
@@ -158,6 +159,32 @@ export default function ProjectHome() {
                     )}
                   </TabsContent>
                 </Tabs>
+              </CardContent>
+            </Card>
+
+            {/* Gantt Chart */}
+            <Card className="shadow-lg border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-shadow">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Cronograma</h3>
+                </div>
+                <GanttChart 
+                  tasks={tasks.map(task => ({
+                    id: task.id,
+                    wbs: task.wbs,
+                    name: task.name,
+                    startDate: task.start_date,
+                    endDate: task.end_date,
+                    duration: task.duration,
+                    progress: task.progress,
+                    isCritical: task.is_critical,
+                    status: task.status,
+                    actualEndDate: task.actual_end_date
+                  }))}
+                />
               </CardContent>
             </Card>
           </div>
