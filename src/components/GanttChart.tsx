@@ -1,8 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, ChevronDown, ChevronRight, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight, ZoomIn, ZoomOut, Maximize2, Upload } from "lucide-react";
 import { useState } from "react";
+import { GanttImportDialog } from "./GanttImportDialog";
+import { calculateAllTasksProgress } from "@/lib/ganttFileParser";
 
 interface Task {
   id: string;
@@ -23,11 +25,15 @@ interface Task {
 
 interface GanttChartProps {
   tasks: Task[];
+  onTasksChange?: (tasks: Task[]) => void;
 }
 
-export const GanttChart = ({ tasks }: GanttChartProps) => {
+type ZoomMode = 'day' | 'month' | 'quarter';
+
+export const GanttChart = ({ tasks, onTasksChange }: GanttChartProps) => {
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomMode, setZoomMode] = useState<ZoomMode>('month');
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const toggleExpand = (taskId: string) => {
     const newExpanded = new Set(expandedTasks);
@@ -48,6 +54,25 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
     setExpandedTasks(new Set());
   };
 
+  const handleImportTasks = (importedTasks: Task[]) => {
+    const tasksWithProgress = calculateAllTasksProgress(importedTasks);
+    onTasksChange?.(tasksWithProgress);
+  };
+
+  const handleZoomIn = () => {
+    if (zoomMode === 'quarter') setZoomMode('month');
+    else if (zoomMode === 'month') setZoomMode('day');
+  };
+
+  const handleZoomOut = () => {
+    if (zoomMode === 'day') setZoomMode('month');
+    else if (zoomMode === 'month') setZoomMode('quarter');
+  };
+
+  const handleZoomToFit = () => {
+    setZoomMode('month');
+  };
+
   const sortedTasks = [...tasks];
 
   // Calcular range de datas para o timeline
@@ -57,21 +82,53 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
   
   const totalDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
   
-  // Gerar semanas para o header
-  const weeks: { start: Date; days: Date[] }[] = [];
-  let currentDate = new Date(minDate);
-  
-  while (currentDate <= maxDate) {
-    const weekStart = new Date(currentDate);
-    const days: Date[] = [];
-    
-    for (let i = 0; i < 7 && currentDate <= maxDate; i++) {
-      days.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
+  // Gerar períodos baseado no zoom
+  const generateTimePeriods = () => {
+    if (zoomMode === 'day') {
+      const weeks: { start: Date; days: Date[] }[] = [];
+      let currentDate = new Date(minDate);
+      
+      while (currentDate <= maxDate) {
+        const weekStart = new Date(currentDate);
+        const days: Date[] = [];
+        
+        for (let i = 0; i < 7 && currentDate <= maxDate; i++) {
+          days.push(new Date(currentDate));
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        weeks.push({ start: weekStart, days });
+      }
+      return { type: 'day', periods: weeks };
+    } else if (zoomMode === 'month') {
+      const months: { start: Date; end: Date }[] = [];
+      let currentDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+      
+      while (currentDate <= maxDate) {
+        const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        months.push({ start: new Date(currentDate), end: monthEnd });
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+      return { type: 'month', periods: months };
+    } else {
+      const quarters: { start: Date; end: Date; label: string }[] = [];
+      let currentDate = new Date(minDate.getFullYear(), Math.floor(minDate.getMonth() / 3) * 3, 1);
+      
+      while (currentDate <= maxDate) {
+        const quarterEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, 0);
+        const quarterNum = Math.floor(currentDate.getMonth() / 3) + 1;
+        quarters.push({ 
+          start: new Date(currentDate), 
+          end: quarterEnd,
+          label: `Q${quarterNum} ${currentDate.getFullYear()}`
+        });
+        currentDate.setMonth(currentDate.getMonth() + 3);
+      }
+      return { type: 'quarter', periods: quarters };
     }
-    
-    weeks.push({ start: weekStart, days });
-  }
+  };
+
+  const timePeriods = generateTimePeriods();
 
   // Criar mapa de índices de tarefas para desenhar dependências
   const taskIndexMap = new Map(sortedTasks.map((task, idx) => [task.id, idx]));
@@ -103,6 +160,10 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
           <Plus className="h-4 w-4 mr-1" />
           Add
         </Button>
+        <Button variant="ghost" size="sm" className="h-8" onClick={() => setImportDialogOpen(true)}>
+          <Upload className="h-4 w-4 mr-1" />
+          Import
+        </Button>
         <Button variant="ghost" size="sm" className="h-8" onClick={expandAll}>
           Expand all
         </Button>
@@ -110,19 +171,28 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
           Collapse all
         </Button>
         <div className="w-px h-6 bg-border mx-1" />
-        <Button variant="ghost" size="sm" className="h-8" onClick={() => setZoomLevel(Math.min(zoomLevel + 0.2, 2))}>
+        <Button variant="ghost" size="sm" className="h-8" onClick={handleZoomIn} disabled={zoomMode === 'day'}>
           <ZoomIn className="h-4 w-4 mr-1" />
           Zoom in
         </Button>
-        <Button variant="ghost" size="sm" className="h-8" onClick={() => setZoomLevel(Math.max(zoomLevel - 0.2, 0.5))}>
+        <Button variant="ghost" size="sm" className="h-8" onClick={handleZoomOut} disabled={zoomMode === 'quarter'}>
           <ZoomOut className="h-4 w-4 mr-1" />
           Zoom out
         </Button>
-        <Button variant="ghost" size="sm" className="h-8" onClick={() => setZoomLevel(1)}>
+        <Button variant="ghost" size="sm" className="h-8" onClick={handleZoomToFit}>
           <Maximize2 className="h-4 w-4 mr-1" />
           Zoom to fit
         </Button>
+        <span className="text-xs text-muted-foreground ml-2">
+          {zoomMode === 'day' ? 'Dia' : zoomMode === 'month' ? 'Mês' : 'Trimestre'}
+        </span>
       </div>
+
+      <GanttImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImport={handleImportTasks}
+      />
 
       <div className="flex">
         {/* Coluna de tarefas */}
@@ -189,51 +259,89 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
 
         {/* Timeline Gantt */}
         <div className="flex-1 overflow-x-auto">
-          <div style={{ minWidth: `${800 * zoomLevel}px` }}>
-            {/* Header de semanas e dias */}
+          <div style={{ minWidth: zoomMode === 'day' ? '1200px' : zoomMode === 'month' ? '800px' : '600px' }}>
+            {/* Header de períodos */}
             <div className="h-[72px] border-b bg-muted/30 sticky top-0">
-              {/* Linha de semanas */}
-              <div className="h-9 flex border-b">
-                {weeks.map((week, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-center text-xs font-semibold border-r"
-                    style={{ width: `${(week.days.length / totalDays) * 100}%` }}
-                  >
-                    {week.start.toLocaleDateString("pt-BR", { month: "short", day: "2-digit", year: "numeric" })}
+              {timePeriods.type === 'day' && (
+                <>
+                  {/* Linha de semanas */}
+                  <div className="h-9 flex border-b">
+                    {(timePeriods.periods as { start: Date; days: Date[] }[]).map((week, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-center text-xs font-semibold border-r"
+                        style={{ width: `${(week.days.length / totalDays) * 100}%` }}
+                      >
+                        {week.start.toLocaleDateString("pt-BR", { month: "short", day: "2-digit", year: "numeric" })}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              {/* Linha de dias */}
-              <div className="h-9 flex">
-                {weeks.flatMap((week) =>
-                  week.days.map((day, dayIdx) => (
-                    <div
-                      key={`${week.start.getTime()}-${dayIdx}`}
-                      className="flex items-center justify-center text-xs border-r"
-                      style={{ width: `${(1 / totalDays) * 100}%` }}
-                    >
-                      {day.getDate()}
-                    </div>
-                  ))
-                )}
-              </div>
+                  {/* Linha de dias */}
+                  <div className="h-9 flex">
+                    {(timePeriods.periods as { start: Date; days: Date[] }[]).flatMap((week) =>
+                      week.days.map((day, dayIdx) => (
+                        <div
+                          key={`${week.start.getTime()}-${dayIdx}`}
+                          className="flex items-center justify-center text-xs border-r"
+                          style={{ width: `${(1 / totalDays) * 100}%` }}
+                        >
+                          {day.getDate()}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+              {timePeriods.type === 'month' && (
+                <div className="h-full flex">
+                  {(timePeriods.periods as { start: Date; end: Date }[]).map((month, idx) => {
+                    const monthDays = Math.ceil((month.end.getTime() - month.start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-center text-xs font-semibold border-r"
+                        style={{ width: `${(monthDays / totalDays) * 100}%` }}
+                      >
+                        {month.start.toLocaleDateString("pt-BR", { month: "short", year: "numeric" })}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {timePeriods.type === 'quarter' && (
+                <div className="h-full flex">
+                  {(timePeriods.periods as { start: Date; end: Date; label: string }[]).map((quarter, idx) => {
+                    const quarterDays = Math.ceil((quarter.end.getTime() - quarter.start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-center text-xs font-semibold border-r"
+                        style={{ width: `${(quarterDays / totalDays) * 100}%` }}
+                      >
+                        {quarter.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Barras do Gantt */}
             <div className="relative">
               {/* Grid de fundo */}
-              <div className="absolute inset-0 flex pointer-events-none">
-                {weeks.flatMap((week) =>
-                  week.days.map((_, dayIdx) => (
-                    <div
-                      key={`grid-${week.start.getTime()}-${dayIdx}`}
-                      className="border-r h-full"
-                      style={{ width: `${(1 / totalDays) * 100}%` }}
-                    />
-                  ))
-                )}
-              </div>
+              {timePeriods.type === 'day' && (
+                <div className="absolute inset-0 flex pointer-events-none">
+                  {(timePeriods.periods as { start: Date; days: Date[] }[]).flatMap((week) =>
+                    week.days.map((_, dayIdx) => (
+                      <div
+                        key={`grid-${week.start.getTime()}-${dayIdx}`}
+                        className="border-r h-full"
+                        style={{ width: `${(1 / totalDays) * 100}%` }}
+                      />
+                    ))
+                  )}
+                </div>
+              )}
 
               {/* Linhas de dependência */}
               <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>

@@ -7,7 +7,7 @@ import { ProjectStory } from "@/components/ProjectStory";
 import { ProjectHealthPanel } from "@/components/ProjectHealthPanel";
 import { StakeholderMatrix } from "@/components/StakeholderMatrix";
 import { useProject } from "@/hooks/useProjects";
-import { useTasks } from "@/hooks/useTasks";
+import { useTasks, useCreateTask } from "@/hooks/useTasks";
 import { useProjectContext } from "@/hooks/useProjectContext";
 import { useProjectRisks } from "@/hooks/useProjectRisks";
 import { useProjectIssues } from "@/hooks/useProjectIssues";
@@ -31,6 +31,7 @@ export default function ProjectHome() {
   const { data: project, isLoading: projectLoading } = useProject(id || "");
   const { data: tasks = [] } = useTasks(id || "");
   const { data: context } = useProjectContext(id || "");
+  const createTask = useCreateTask();
   const { data: risks = [] } = useProjectRisks(id || "");
   const { data: issues = [] } = useProjectIssues(id || "");
   const { data: stakeholders = [] } = useStakeholders(id || "");
@@ -56,6 +57,23 @@ export default function ProjectHome() {
   const criticalTasks = tasks.filter((t) => t.is_critical);
   const recentMeetings = meetings.slice(0, 3);
   const pendingActions = actionItems.filter((a) => a.status === "pendente");
+
+  const handleTasksChange = async (newTasks: any[]) => {
+    for (const task of newTasks) {
+      await createTask.mutateAsync({
+        project_id: id || "",
+        wbs: task.wbs,
+        name: task.name,
+        start_date: task.startDate,
+        end_date: task.endDate,
+        duration: task.duration,
+        progress: task.progress,
+        status: task.status,
+        is_critical: task.isCritical,
+        parent_id: null,
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary-light/20 to-accent-light/10">
@@ -182,8 +200,8 @@ export default function ProjectHome() {
                     progress: task.progress,
                     isCritical: task.is_critical,
                     status: task.status,
-                    actualEndDate: task.actual_end_date
                   }))}
+                  onTasksChange={handleTasksChange}
                 />
               </CardContent>
             </Card>
