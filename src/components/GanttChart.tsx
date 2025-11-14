@@ -80,12 +80,13 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
     <Card className="overflow-hidden">
       <div className="flex">
         {/* Coluna de tarefas */}
-        <div className="w-[500px] border-r bg-muted/30">
+        <div className="w-[700px] border-r bg-muted/30">
           <div className="h-16 border-b bg-card flex items-center px-4 font-semibold text-sm sticky top-0">
             <div className="w-16">WBS</div>
             <div className="flex-1">Tarefa</div>
-            <div className="w-24 text-center">Duração</div>
-            <div className="w-32 text-center">Dependências</div>
+            <div className="w-28 text-center">Início</div>
+            <div className="w-28 text-center">Fim</div>
+            <div className="w-20 text-center">Dias</div>
           </div>
           <div className="divide-y">
             {sortedTasks.map((task) => (
@@ -103,36 +104,14 @@ export const GanttChart = ({ tasks }: GanttChartProps) => {
                     </Badge>
                   )}
                 </div>
-                <div className="w-24 text-center text-muted-foreground">
-                  {task.duration}d
+                <div className="w-28 text-center text-xs text-muted-foreground">
+                  {new Date(task.startDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
                 </div>
-                <div className="w-32 text-center">
-                  {task.dependencies && task.dependencies.length > 0 ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge variant="secondary" className="text-xs cursor-help">
-                            {task.dependencies.length} dep.
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <div className="text-sm">
-                            <div className="font-semibold mb-1">Depende de:</div>
-                            {task.dependencies.map((depId) => {
-                              const depTask = sortedTasks.find((t) => t.id === depId);
-                              return depTask ? (
-                                <div key={depId} className="text-xs">
-                                  {depTask.wbs} - {depTask.name}
-                                </div>
-                              ) : null;
-                            })}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">-</span>
-                  )}
+                <div className="w-28 text-center text-xs text-muted-foreground">
+                  {new Date(task.endDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                </div>
+                <div className="w-20 text-center text-muted-foreground">
+                  {task.duration}d
                 </div>
               </div>
             ))}

@@ -33,7 +33,6 @@ export const TaskDialog = ({
   onSave,
   task,
   projectId,
-  tasks,
 }: TaskDialogProps) => {
   const [formData, setFormData] = useState<Partial<Task>>({
     wbs: "",
@@ -44,7 +43,6 @@ export const TaskDialog = ({
     progress: 0,
     is_critical: false,
     status: "not-started",
-    parent_id: null,
     project_id: projectId,
   });
 
@@ -61,7 +59,6 @@ export const TaskDialog = ({
         progress: 0,
         is_critical: false,
         status: "not-started",
-        parent_id: null,
         project_id: projectId,
       });
     }
@@ -90,37 +87,56 @@ export const TaskDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>{task ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="wbs">WBS</Label>
-              <Input
-                id="wbs"
-                value={formData.wbs}
-                onChange={(e) => setFormData({ ...formData, wbs: e.target.value })}
-                placeholder="1.0"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome da Tarefa</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Nome da tarefa"
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome da Tarefa *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Digite o nome da tarefa"
+              required
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start_date">Data de Início</Label>
+              <Label htmlFor="wbs">WBS *</Label>
+              <Input
+                id="wbs"
+                value={formData.wbs}
+                onChange={(e) => setFormData({ ...formData, wbs: e.target.value })}
+                placeholder="Ex: 1.0"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, status: value as Task["status"] })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="not-started">Não Iniciada</SelectItem>
+                  <SelectItem value="in-progress">Em Progresso</SelectItem>
+                  <SelectItem value="completed">Concluída</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="start_date">Data Início *</Label>
               <Input
                 id="start_date"
                 type="date"
@@ -130,26 +146,13 @@ export const TaskDialog = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="end_date">Data de Término</Label>
+              <Label htmlFor="end_date">Data Fim *</Label>
               <Input
                 id="end_date"
                 type="date"
                 value={formData.end_date}
                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                 required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duração (dias)</Label>
-              <Input
-                id="duration"
-                type="number"
-                value={formData.duration}
-                readOnly
-                className="bg-muted"
               />
             </div>
             <div className="space-y-2">
@@ -165,85 +168,19 @@ export const TaskDialog = ({
                 }
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: Task["status"]) =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="not-started">Não Iniciado</SelectItem>
-                  <SelectItem value="in-progress">Em Progresso</SelectItem>
-                  <SelectItem value="completed">Concluído</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
-          {formData.status === "completed" && (
-            <div className="space-y-2">
-              <Label htmlFor="actual_end_date">Data Real de Conclusão</Label>
-              <Input
-                id="actual_end_date"
-                type="date"
-                value={formData.actual_end_date || ""}
-                onChange={(e) => setFormData({ ...formData, actual_end_date: e.target.value })}
-              />
-              {formData.actual_end_date && formData.end_date && (
-                <p className="text-sm">
-                  {new Date(formData.actual_end_date) <= new Date(formData.end_date) ? (
-                    <span className="text-green-600">✓ Concluída no prazo</span>
-                  ) : (
-                    <span className="text-red-600">
-                      ⚠ Atrasada em {Math.ceil((new Date(formData.actual_end_date).getTime() - new Date(formData.end_date).getTime()) / (1000 * 60 * 60 * 24))} dias
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="parent_id">Tarefa Pai (opcional)</Label>
-              <Select
-                value={formData.parent_id || "none"}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, parent_id: value === "none" ? null : value })
-                }
-              >
-                <SelectTrigger id="parent_id">
-                  <SelectValue placeholder="Nenhuma" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                  {tasks
-                    .filter((t) => t.id !== task?.id)
-                    .map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.wbs} - {t.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2 pt-8">
-              <input
-                id="is_critical"
-                type="checkbox"
-                checked={formData.is_critical}
-                onChange={(e) => setFormData({ ...formData, is_critical: e.target.checked })}
-                className="h-4 w-4"
-              />
-              <Label htmlFor="is_critical" className="cursor-pointer">
-                Tarefa Crítica
-              </Label>
-            </div>
+          <div className="flex items-center gap-2">
+            <input
+              id="is_critical"
+              type="checkbox"
+              checked={formData.is_critical}
+              onChange={(e) => setFormData({ ...formData, is_critical: e.target.checked })}
+              className="h-4 w-4 rounded border-input"
+            />
+            <Label htmlFor="is_critical" className="cursor-pointer">
+              Tarefa Crítica
+            </Label>
           </div>
 
           <DialogFooter>
