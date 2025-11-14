@@ -240,7 +240,12 @@ export default function ScheduleView() {
               </div>
             </div>
             {ganttTasks.length > 0 ? (
-              <GanttChart tasks={ganttTasks} />
+              <GanttChart 
+                tasks={ganttTasks} 
+                onTaskUpdate={(taskId, updates) => {
+                  updateTask.mutate({ id: taskId, ...updates });
+                }}
+              />
             ) : (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground">Nenhuma tarefa cadastrada ainda.</p>
