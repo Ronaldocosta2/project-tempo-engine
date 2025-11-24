@@ -11,8 +11,10 @@ import { TaskImportDialog } from "@/components/TaskImportDialog";
 import { ScheduleMetrics } from "@/components/ScheduleMetrics";
 import { ConflictsPanel } from "@/components/ConflictsPanel";
 import { CrossProjectAnalysis } from "@/components/CrossProjectAnalysis";
+import { ProjectDashboard } from "@/components/ProjectDashboard";
 import { useProject } from "@/hooks/useProjects";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
+import { useProjectStats } from "@/hooks/useProjectStats";
 import {
   ArrowLeft,
   Calendar,
@@ -25,6 +27,7 @@ import {
   Trash2,
   UserCheck,
   Upload,
+  CheckCircle,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -37,6 +40,7 @@ export default function ScheduleView() {
 
   const { data: project, isLoading: projectLoading } = useProject(id || "");
   const { data: tasks = [], isLoading: tasksLoading } = useTasks(id || "");
+  const projectStats = useProjectStats(tasks);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -99,6 +103,33 @@ export default function ScheduleView() {
 
   const criticalTasks = tasks.filter((t) => t.is_critical);
 
+  const statsCards = [
+    {
+      label: "Tarefas Totais",
+      value: projectStats.totalTasks.toString(),
+      icon: CheckCircle,
+      color: "text-primary",
+    },
+    {
+      label: "Tarefas Críticas",
+      value: criticalTasks.length.toString(),
+      icon: AlertTriangle,
+      color: "text-critical",
+    },
+    {
+      label: "Progresso Médio",
+      value: `${projectStats.completionPercentage}%`,
+      icon: Clock,
+      color: "text-warning",
+    },
+    {
+      label: "Equipe",
+      value: project.team_size.toString(),
+      icon: Users,
+      color: "text-success",
+    },
+  ];
+
   const ganttTasks = tasks.map((t) => ({
     id: t.id,
     wbs: t.wbs,
@@ -111,35 +142,6 @@ export default function ScheduleView() {
     status: t.status,
     actualEndDate: t.actual_end_date,
   }));
-
-  const stats = [
-    {
-      label: "Tarefas Totais",
-      value: tasks.length.toString(),
-      icon: TrendingUp,
-      color: "text-primary",
-    },
-    {
-      label: "Tarefas Críticas",
-      value: criticalTasks.length.toString(),
-      icon: AlertTriangle,
-      color: "text-critical",
-    },
-    {
-      label: "Progresso Médio",
-      value: tasks.length > 0 
-        ? `${Math.round(tasks.reduce((acc, t) => acc + t.progress, 0) / tasks.length)}%`
-        : "0%",
-      icon: Clock,
-      color: "text-warning",
-    },
-    {
-      label: "Equipe",
-      value: project.team_size.toString(),
-      icon: Users,
-      color: "text-success",
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -197,9 +199,12 @@ export default function ScheduleView() {
           </div>
         </div>
 
+        {/* Dashboard em Destaque */}
+        <ProjectDashboard stats={projectStats} projectName={project.name} />
+
         {/* Stats Cards */}
         <div className="grid grid-cols-4 gap-4">
-          {stats.map((stat) => (
+          {statsCards.map((stat) => (
             <Card key={stat.label} className="p-4">
               <div className="flex items-center justify-between">
                 <div>

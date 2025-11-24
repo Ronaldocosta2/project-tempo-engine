@@ -182,9 +182,30 @@ export const GanttChart = ({ tasks, onTasksChange, onTaskUpdate }: GanttChartPro
   };
 
   const getTaskColor = (task: Task) => {
+    // Cores baseadas no status
+    if (task.status === "completed") return "#22c55e"; // Verde
+    if (task.status === "in-progress") return "#eab308"; // Amarelo
+    if (task.status === "not-started") return "#94a3b8"; // Cinza
+    
+    // Fallback para cor customizada ou crítica
     if (task.color) return task.color;
-    if (task.isCritical) return "#ef4444";
-    return "hsl(var(--primary))";
+    if (task.isCritical) return "#ef4444"; // Vermelho
+    return "#3b82f6"; // Azul padrão
+  };
+  
+  const getTaskDelay = (task: Task): number => {
+    const today = new Date();
+    const endDate = new Date(task.endDate);
+    
+    if (task.status !== "completed") {
+      const delay = Math.ceil((today.getTime() - endDate.getTime()) / (1000 * 60 * 60 * 24));
+      return delay > 0 ? delay : 0;
+    }
+    return 0;
+  };
+  
+  const isTaskDelayed = (task: Task): boolean => {
+    return getTaskDelay(task) > 0 && task.status !== "completed";
   };
 
   return (
@@ -551,19 +572,34 @@ export const GanttChart = ({ tasks, onTasksChange, onTaskUpdate }: GanttChartPro
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div
-                            className="absolute top-1/2 -translate-y-1/2 h-7 rounded cursor-pointer"
-                            style={{
-                              left: `${left}%`,
-                              width: `${width}%`,
-                              minWidth: "40px",
-                              backgroundColor: getTaskColor(task),
-                              opacity: 0.9,
-                            }}
-                          >
-                            <div className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-white">
-                              {task.progress}%
+                          <div className="relative">
+                            <div
+                              className="absolute top-1/2 -translate-y-1/2 h-7 rounded cursor-pointer hover:opacity-80 transition-opacity flex items-center px-2"
+                              style={{
+                                left: `${left}%`,
+                                width: `${width}%`,
+                                minWidth: "40px",
+                                backgroundColor: getTaskColor(task),
+                              }}
+                            >
+                              <div
+                                className="h-full rounded bg-white/30"
+                                style={{ width: `${task.progress}%` }}
+                              />
                             </div>
+                            {isTaskDelayed(task) && (
+                              <div
+                                className="absolute top-1/2 -translate-y-1/2"
+                                style={{
+                                  left: `${left + width}%`,
+                                  marginLeft: '8px'
+                                }}
+                              >
+                                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-600 rounded-full animate-pulse">
+                                  !
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
