@@ -28,6 +28,20 @@ export const ScheduleDialog = ({ projectId, projectName, open, onOpenChange }: S
     actualEndDate: t.actual_end_date || undefined,
   }));
 
+  const handleTaskUpdate = (taskId: string, updates: any) => {
+    // Mapear campos do Gantt para campos do banco de dados
+    const dbUpdates: any = {};
+    
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.startDate !== undefined) dbUpdates.start_date = updates.startDate;
+    if (updates.endDate !== undefined) dbUpdates.end_date = updates.endDate;
+    if (updates.progress !== undefined) dbUpdates.progress = updates.progress;
+    if (updates.resources !== undefined) dbUpdates.resource_id = updates.resources;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    
+    updateTask.mutate({ id: taskId, ...dbUpdates });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden flex flex-col p-0">
@@ -51,9 +65,7 @@ export const ScheduleDialog = ({ projectId, projectName, open, onOpenChange }: S
           {ganttTasks.length > 0 ? (
             <GanttChart 
               tasks={ganttTasks} 
-              onTaskUpdate={(taskId, updates) => {
-                updateTask.mutate({ id: taskId, ...updates });
-              }}
+              onTaskUpdate={handleTaskUpdate}
             />
           ) : (
             <div className="p-8 text-center">
