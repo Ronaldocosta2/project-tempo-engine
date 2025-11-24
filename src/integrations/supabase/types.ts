@@ -986,7 +986,7 @@ export type Database = {
     }
     Functions: {
       get_admin_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_users_30d: number
           active_users_7d: number
