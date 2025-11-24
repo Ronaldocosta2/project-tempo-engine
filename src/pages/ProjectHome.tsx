@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { ProjectOverview } from "@/components/ProjectOverview";
 import { ProjectStory } from "@/components/ProjectStory";
 import { ProjectHealthPanel } from "@/components/ProjectHealthPanel";
 import { StakeholderMatrix } from "@/components/StakeholderMatrix";
+import { ScheduleDialog } from "@/components/ScheduleDialog";
 import { useProject } from "@/hooks/useProjects";
 import { useTasks, useCreateTask } from "@/hooks/useTasks";
 import { useProjectContext } from "@/hooks/useProjectContext";
@@ -27,6 +29,7 @@ import {
 export default function ProjectHome() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useProject(id || "");
   const { data: tasks = [] } = useTasks(id || "");
@@ -92,11 +95,11 @@ export default function ProjectHome() {
           <div className="flex items-center gap-3">
             <Button 
               variant="outline" 
-              onClick={() => navigate(`/project/${id}/schedule`)}
+              onClick={() => setScheduleDialogOpen(true)}
               className="shadow-sm hover:shadow-md transition-all hover:scale-105 border-border/50 bg-card/50 backdrop-blur-sm"
             >
               <Calendar className="h-4 w-4 mr-2" />
-              Cronograma Gantt
+              Ver Cronograma
             </Button>
             <Button 
               variant="outline" 
@@ -278,6 +281,14 @@ export default function ProjectHome() {
           </div>
         </div>
       </div>
+
+      {/* Schedule Dialog */}
+      <ScheduleDialog
+        projectId={id || ""}
+        projectName={project?.name || ""}
+        open={scheduleDialogOpen}
+        onOpenChange={setScheduleDialogOpen}
+      />
     </div>
   );
 }
