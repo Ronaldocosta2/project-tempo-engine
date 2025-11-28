@@ -39,19 +39,24 @@ export const useProjects = () => {
 };
 
 export const useProject = (id: string) => {
+  const { user } = useAuth();
+  
   return useQuery({
     queryKey: ["projects", id],
     queryFn: async () => {
+      if (!user?.id) return null;
+      
       const { data, error } = await supabase
         .from("projects")
         .select("*")
         .eq("id", id)
-        .single();
+        .eq("user_id", user.id)
+        .maybeSingle();
 
       if (error) throw error;
-      return data as Project;
+      return data as Project | null;
     },
-    enabled: !!id,
+    enabled: !!id && !!user?.id,
   });
 };
 
