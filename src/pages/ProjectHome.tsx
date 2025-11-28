@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,10 +32,11 @@ import {
 export default function ProjectHome() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, isLoading: authLoading } = useAuth();
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
 
-  const { data: project, isLoading: projectLoading } = useProject(id || "");
+  const { data: project, isLoading: projectLoading } = useProject(id || "", user?.id);
   const { data: tasks = [] } = useTasks(id || "");
   const { data: context } = useProjectContext(id || "");
   const createTask = useCreateTask();
@@ -44,7 +46,13 @@ export default function ProjectHome() {
   const { data: meetings = [] } = useMeetings(id || "");
   const { data: actionItems = [] } = useActionItems(id || "");
 
-  if (projectLoading) {
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  if (authLoading || projectLoading) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
         <p className="text-muted-foreground">Carregando...</p>
