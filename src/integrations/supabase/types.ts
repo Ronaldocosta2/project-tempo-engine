@@ -389,6 +389,50 @@ export type Database = {
           },
         ]
       }
+      project_documents: {
+        Row: {
+          content: Json
+          created_at: string | null
+          created_by: string | null
+          document_type: string
+          id: string
+          project_id: string
+          title: string
+          updated_at: string | null
+          version: number
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          created_by?: string | null
+          document_type: string
+          id?: string
+          project_id: string
+          title: string
+          updated_at?: string | null
+          version?: number
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          created_by?: string | null
+          document_type?: string
+          id?: string
+          project_id?: string
+          title?: string
+          updated_at?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_issues: {
         Row: {
           assigned_to: string | null

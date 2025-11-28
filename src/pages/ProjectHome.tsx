@@ -8,6 +8,7 @@ import { ProjectStory } from "@/components/ProjectStory";
 import { ProjectHealthPanel } from "@/components/ProjectHealthPanel";
 import { StakeholderMatrix } from "@/components/StakeholderMatrix";
 import { ScheduleDialog } from "@/components/ScheduleDialog";
+import { DocumentDialog } from "@/components/DocumentDialog";
 import { useProject } from "@/hooks/useProjects";
 import { useTasks, useCreateTask } from "@/hooks/useTasks";
 import { useProjectContext } from "@/hooks/useProjectContext";
@@ -24,12 +25,14 @@ import {
   Users,
   ListTodo,
   UserCheck,
+  FileText,
 } from "lucide-react";
 
 export default function ProjectHome() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useProject(id || "");
   const { data: tasks = [] } = useTasks(id || "");
@@ -100,6 +103,14 @@ export default function ProjectHome() {
             >
               <Calendar className="h-4 w-4 mr-2" />
               Ver Cronograma
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setDocumentDialogOpen(true)}
+              className="shadow-sm hover:shadow-md transition-all hover:scale-105 border-border/50 bg-card/50 backdrop-blur-sm"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Documentação
             </Button>
             <Button 
               variant="outline" 
@@ -288,6 +299,13 @@ export default function ProjectHome() {
         projectName={project?.name || ""}
         open={scheduleDialogOpen}
         onOpenChange={setScheduleDialogOpen}
+      />
+      
+      {/* Document Dialog */}
+      <DocumentDialog
+        open={documentDialogOpen}
+        onOpenChange={setDocumentDialogOpen}
+        projectId={id || ""}
       />
     </div>
   );
