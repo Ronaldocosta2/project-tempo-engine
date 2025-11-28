@@ -38,9 +38,9 @@ export const useProjects = () => {
   });
 };
 
-export const useProject = (id: string) => {
+export const useProject = (id: string, userId?: string | null) => {
   return useQuery({
-    queryKey: ["projects", id],
+    queryKey: ["projects", id, userId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
@@ -51,7 +51,7 @@ export const useProject = (id: string) => {
       if (error) throw error;
       return data as Project | null;
     },
-    enabled: !!id,
+    enabled: !!id && !!userId,
   });
 };
 
